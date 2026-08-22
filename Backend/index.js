@@ -2,11 +2,19 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const PORT = process.env.PORT || 8000
+const ConnectDB = require("./src/utils/db")
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
 
 app.get("/", (req, res) => {
     res.send("<h1>Welcome to Star7Foodies</h1>")
 })
 
-app.listen(PORT, () => {
-    console.log(`Server is running at ${PORT}`)
+app.use("/api/users", require("./src/routes/auth.route"))
+
+ConnectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server is running at ${PORT}`)
+    })
 })
