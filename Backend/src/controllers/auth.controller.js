@@ -1,5 +1,11 @@
 const User = require("../models/auth.model");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const generateToken = (userId) => {
+    const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    return token
+}
 
 const registerUser = async (req, res) => {
     try {
@@ -50,10 +56,20 @@ const loginUser = async (req, res) => {
             return res.status(500).json({ message: "Invalid password" });
         }
 
-        res.status(200).json({
-            message: "User logged in successfully",
-            user
-        })
+        const token = generateToken(user._id)
+
+        res
+            .status(200)
+            .cookie("token", token)
+            .json({
+                message: "User logged in successfully",
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                }
+            })
 
     } catch (error) {
         console.log("Something went wrong while loggin user", error);
@@ -61,4 +77,19 @@ const loginUser = async (req, res) => {
     }
 }
 
-module.exports = { registerUser, loginUser }
+const getCurrentUser = async (req, res) => {
+    try {
+        res.status(200).json({
+            message: "Current User",
+            user: req.user
+        })
+    } catch (error) {
+        console.log("Error while getting current user", error)
+        res.status(400).json({
+            message: "Error while getting current user"
+        })
+    }
+}
+
+
+module.exports = { registerUser, loginUser, getCurrentUser }
