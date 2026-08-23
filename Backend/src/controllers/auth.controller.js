@@ -1,6 +1,7 @@
 const User = require("../models/auth.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { options } = require("../utils/cookieOptions")
 
 const generateToken = (userId) => {
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -12,7 +13,7 @@ const registerUser = async (req, res) => {
         const { name, email, password } = req.body
         console.log(name, email, password)
         if (!name || !email || !password) {
-            return res.status(500).json({ message: "All fields are required" });
+            return res.status(400).json({ message: "All fields are required" });
         }
 
         const existingUser = await User.findOne({ email });
@@ -41,26 +42,26 @@ const loginUser = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(500).json({ message: "All fields are required" })
+            return res.status(400).json({ message: "All fields are required" })
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({ messsage: "User does not exists! Please signup first" })
+            return res.status(400).json({ message: "User does not exist! Please signup first" })
         }
 
         const isValidPassword = await bcrypt.compare(password, user.password);
 
         if (!isValidPassword) {
-            return res.status(500).json({ message: "Invalid password" });
+            return res.status(401).json({ message: "Invalid password" });
         }
 
         const token = generateToken(user._id)
 
         res
             .status(200)
-            .cookie("token", token)
+            .cookie("token", token, options)
             .json({
                 message: "User logged in successfully",
                 user: {
@@ -72,8 +73,8 @@ const loginUser = async (req, res) => {
             })
 
     } catch (error) {
-        console.log("Something went wrong while loggin user", error);
-        res.status(500).json({ message: "Something went wrong while loggin user" })
+        console.log("Something went wrong while logging user", error);
+        res.status(500).json({ message: "Something went wrong while logging user" })
     }
 }
 
@@ -91,5 +92,19 @@ const getCurrentUser = async (req, res) => {
     }
 }
 
+const logoutUser = async (req, res) => {
+    try {
+        res
+            .status(200)
+            .clearCookie("token", options)
+            .json({ message: "Logged out successfully" })
+    } catch (error) {
+        console.log("Logout Error", error);
+        res.status(400).json({
+            message: "Logout error"
+        })
+    }
+}
 
-module.exports = { registerUser, loginUser, getCurrentUser }
+
+module.exports = { registerUser, loginUser, getCurrentUser, logoutUser }

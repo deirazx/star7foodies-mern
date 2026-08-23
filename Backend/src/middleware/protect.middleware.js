@@ -4,7 +4,7 @@ require("dotenv").config();
 
 const protect = async (req, res, next) => {
     try {
-        const token = req.cookie.token
+        const token = req.cookies.token
 
         if (!token) {
             return res.status(401).json({ message: 'Not authorized, no token provided' });
