@@ -14,6 +14,7 @@ app.get("/", (req, res) => {
 })
 
 app.use("/api/users", require("./src/routes/auth.route"));
+app.use("/api/products", require("./src/routes/product.route"));
 
 ConnectDB().then(() => {
     app.listen(PORT, () => {
