@@ -1,5 +1,5 @@
 const Product = require("../models/product.model");
-const cloudinary = require("../config/cloudinary.config")
+const cloudinary = require("../config/cloudinary.config");
 const mongoose = require("mongoose");
 
 const createProduct = async (req, res) => {
@@ -89,4 +89,75 @@ const getProductById = async (req, res) => {
     }
 }
 
-module.exports = { createProduct, getAllProducts, getProductById }
+const updateProduct = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { name, price, description, category, productOverView, portion } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid product ID format." });
+        }
+
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return res.status(404).json({
+                message: "Product not found."
+            })
+        }
+
+        let imageUrl = "";
+
+        if (name || price || description || category || productOverView || portion || req.file) {
+            product.name = name || product.name;
+            product.price = price || product.price;
+            product.description = description || product.description;
+            product.category = category || product.category;
+            product.productOverView = productOverView || product.productOverView;
+            product.portion = portion || product.portion;
+
+            if (req.file) {
+                const result = await cloudinary.uploader.upload(req.file.path);
+                console.log(`Updated image url ${result.secure_url}`);
+                imageUrl = result.secure_url;
+                product.imageUrl = imageUrl;
+            }
+
+            const updatedProduct = await product.save();
+            return res.status(200).json({ message: "Product updated successfully", updatedProduct });
+        } else {
+            return res.status(400).json({ message: "No fields provided to update." });
+        }
+    } catch (error) {
+        console.log("Error while updating product", error)
+        res.status(500).json({ message: `Something went wrong while updating ${id}` })
+    }
+}
+
+const deleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                message: "Product ID is required."
+            })
+        }
+
+        const deletedProduct = await Product.findByIdAndDelete(id);
+        if (!deletedProduct) {
+            return res.status(404).json({
+                message: "Product not found."
+            })
+        }
+
+        res.status(200).json({ message: "Product deleted successfully", deletedProduct })
+    } catch (error) {
+        console.error("Something went wrong while deleting product", error)
+        res.status(500).json({
+            message: 'Something went wrong while deleting the product. Please try again.'
+        })
+    }
+}
+
+module.exports = { createProduct, getAllProducts, getProductById, updateProduct, deleteProduct }
