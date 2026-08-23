@@ -1,5 +1,6 @@
 const Product = require("../models/product.model");
 const cloudinary = require("../config/cloudinary.config")
+const mongoose = require("mongoose");
 
 const createProduct = async (req, res) => {
     try {
@@ -66,4 +67,26 @@ const getAllProducts = async (req, res) => {
     }
 }
 
-module.exports = { createProduct, getAllProducts }
+const getProductById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid product ID format." });
+        }
+
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found." });
+        }
+
+        return res.status(200).json({ message: "Successfully get product details", product });
+
+    } catch (error) {
+        console.log("Error while getting product details:", error);
+        res.status(500).json({ message: "Something went wrong while getting product details" });
+    }
+}
+
+module.exports = { createProduct, getAllProducts, getProductById }
