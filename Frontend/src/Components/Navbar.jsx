@@ -11,7 +11,7 @@ import {
     FaMapMarkerAlt,
     FaHeart
 } from "react-icons/fa";
-import { allFoods } from '../Api/axios';
+import { Link } from "react-router-dom";
 
 function Navbar({ cartCount = 0 }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -47,14 +47,14 @@ function Navbar({ cartCount = 0 }) {
                         {/* LEFT SECTION: Logo & Location */}
                         <div className='flex items-center gap-6 shrink-0'>
                             {/* Logo */}
-                            <a href="/" className="flex items-center gap-2 group">
+                            <Link to="/" className="flex items-center gap-2 group">
                                 <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform duration-300">
                                     <FaUtensils className="text-xs md:text-sm" />
                                 </div>
                                 <span className="text-lg md:text-xl font-bold tracking-tight text-white font-sans">
                                     Star7<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Foodies</span>
                                 </span>
-                            </a>
+                            </Link>
 
                             {/* Location Picker */}
                             <div className="relative hidden sm:block">
@@ -95,9 +95,9 @@ function Navbar({ cartCount = 0 }) {
                                 { name: 'About', path: '/about' },
                                 { name: 'Contact', path: '/contact' }
                             ].map((item) => (
-                                <a
+                                <Link
                                     key={item.name}
-                                    href={item.path}
+                                    to={item.path}
                                     className='relative text-gray-300 hover:text-white text-sm font-medium transition-colors duration-200 flex items-center gap-1'
                                 >
                                     {item.name}
@@ -106,7 +106,7 @@ function Navbar({ cartCount = 0 }) {
                                             {item.badge}
                                         </span>
                                     )}
-                                </a>
+                                </Link>
                             ))}
                         </div>
 
@@ -164,13 +164,13 @@ function Navbar({ cartCount = 0 }) {
                                                 <p className="text-white text-xs truncate font-medium">{user.email}</p>
                                             </div>
 
-                                            <a href="/orders" className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-300 hover:text-amber-500 hover:bg-white/5 transition-all font-medium" onClick={() => setShowProfileDropdown(false)}>
+                                            <Link to="/orders" className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-300 hover:text-amber-500 hover:bg-white/5 transition-all font-medium" onClick={() => setShowProfileDropdown(false)}>
                                                 <FaHistory /> My Orders
-                                            </a>
+                                            </Link>
 
-                                            <a href="/profile" className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-300 hover:text-amber-500 hover:bg-white/5 transition-all font-medium" onClick={() => setShowProfileDropdown(false)}>
+                                            <Link to="/profile" className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-300 hover:text-amber-500 hover:bg-white/5 transition-all font-medium" onClick={() => setShowProfileDropdown(false)}>
                                                 <FaUtensils /> Restaurant Profile
-                                            </a>
+                                            </Link>
 
                                             <button
                                                 onClick={handleLogout}
@@ -182,13 +182,12 @@ function Navbar({ cartCount = 0 }) {
                                     )}
                                 </div>
                             ) : (
-                                <button
-                                    onClick={() => setUser({ name: 'John Doe', email: 'star7foodies@gmail.com', avatar: 'S' })}
+                                <Link to="/login"
                                     className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full text-xs font-semibold shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                 >
                                     <FaUser className="text-[10px]" />
                                     <span>Login</span>
-                                </button>
+                                </Link>
                             )}
 
                             {/* Mobile Toggle */}
@@ -238,15 +237,15 @@ function Navbar({ cartCount = 0 }) {
                         user && { name: 'My Orders', path: '/orders' },
                         user && { name: 'Logout', path: '#', action: handleLogout }
                     ].filter(Boolean).map((item, index) => (
-                        <a
+                        <Link
                             key={item.name}
-                            href={item.path}
+                            to={item.path}
                             onClick={item.action ? item.action : () => setMobileMenuOpen(false)}
                             className='block text-gray-300 text-base font-medium hover:text-amber-500 transition-colors'
                             style={{ animation: mobileMenuOpen ? `slideIn 0.3s ease-out ${index * 0.05}s both` : 'none' }}
                         >
                             {item.name}
-                        </a>
+                        </Link>
                     ))}
 
                     {!user && (
