@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
     FaEnvelope, 
     FaLock, 
@@ -10,7 +10,11 @@ import {
     FaArrowRight,
     FaExclamationCircle
 } from 'react-icons/fa';
-import { loginUser } from '../Api/axios';
+import { loginUser, googleLoginUser } from '../Api/axios';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, provider } from '../Utils/firebase';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../Redux/Slices/auth.js';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -20,6 +24,9 @@ const Login = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -27,9 +34,31 @@ const Login = () => {
         try {
             const response = await loginUser({ email, password });
             const user = response.user ? response.user : response;
-            alert(`Email: ${user?.email} & role: ${user?.role}`);
+            dispatch(setUser(user));
+            navigate('/');
         } catch (err) {
             setError(err.message || "Something went wrong. Please check your credentials.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setError(null);
+        setLoading(true);
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const name = result.user.displayName;
+            const email = result.user.email;
+
+            // Sync auth details with MERN backend
+            const response = await googleLoginUser({ name, email });
+            const user = response.user ? response.user : response;
+            
+            dispatch(setUser(user));
+            navigate('/');
+        } catch (err) {
+            setError(err.message || "Google Sign-In failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -82,6 +111,7 @@ const Login = () => {
                 {/* Google Sign In Button */}
                 <button 
                     type="button" 
+                    onClick={handleGoogleLogin}
                     disabled={loading}
                     className={`w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >

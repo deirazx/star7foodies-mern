@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     FaUser,
     FaEnvelope,
@@ -11,7 +11,11 @@ import {
     FaArrowRight,
     FaExclamationCircle
 } from 'react-icons/fa';
-import { registerUser } from '../Api/axios';
+import { registerUser, googleLoginUser } from '../Api/axios';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, provider } from '../Utils/firebase';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../Redux/Slices/auth.js';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -21,19 +25,43 @@ const Signup = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
         try {
-            // Auth register
             await registerUser({ name, email, password });
             alert(`Account created successfully for ${email}!`);
             setName("");
             setEmail("");
             setPassword("");
+            navigate('/login');
         } catch (err) {
             setError(err.message || "Failed to create account. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSignup = async () => {
+        setError(null);
+        setLoading(true);
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const name = result.user.displayName;
+            const email = result.user.email;
+
+            // Sync with backend (auto-registers if new user)
+            const response = await googleLoginUser({ name, email });
+            const user = response.user ? response.user : response;
+
+            dispatch(setUser(user));
+            navigate('/');
+        } catch (err) {
+            setError(err.message || "Google Sign-Up failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -80,6 +108,7 @@ const Signup = () => {
                 {/* Google Sign Up Button */}
                 <button
                     type="button"
+                    onClick={handleGoogleSignup}
                     disabled={loading}
                     className={`w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
@@ -166,7 +195,7 @@ const Signup = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2`}
+                        className={`w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-2`}
                     >
                         <span>{loading ? 'Creating Account...' : 'Sign Up'}</span>
                         {!loading && <FaArrowRight className="text-[10px]" />}

@@ -107,4 +107,47 @@ const logoutUser = async (req, res) => {
 }
 
 
-module.exports = { registerUser, loginUser, getCurrentUser, logoutUser }
+const googleLogin = async (req, res) => {
+    try {
+        const { name, email } = req.body;
+
+        if (!name || !email) {
+            return res.status(400).json({ message: "Name and email are required" });
+        }
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Generate a secure random password to satisfy the mongoose model validation constraint
+            const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            
+            user = new User({
+                name,
+                email,
+                password: randomPassword,
+                role: "user"
+            });
+            await user.save();
+        }
+
+        const token = generateToken(user._id);
+
+        res
+            .status(200)
+            .cookie("token", token, options)
+            .json({
+                message: "Logged in with Google successfully",
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                }
+            });
+    } catch (error) {
+        console.log("Error in Google Login", error);
+        res.status(500).json({ message: "Something went wrong during Google Login", error: error.message });
+    }
+};
+
+module.exports = { registerUser, loginUser, getCurrentUser, logoutUser, googleLogin }

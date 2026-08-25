@@ -13,6 +13,10 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser, clearUser } from '../Redux/Slices/auth.js';
+import { currentUser, logoutUser } from '../Api/axios';
+
 function Navbar({ cartCount = 0 }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -20,20 +24,40 @@ function Navbar({ cartCount = 0 }) {
     const [activeLocation, setActiveLocation] = useState('Mumbai, India');
     const [wishlistCount, setWishlistCount] = useState(2);
 
-    // Mock user state to demonstrate logged-in design. Set to null for logged-out design.
-    const [user, setUser] = useState({
-        name: 'John Doe',
-        email: 'star7foodies@gmail.com',
-        avatar: 'S'
-    });
+    const user = useSelector((state) => state?.auth?.user);
+    const dispatch = useDispatch();
+
+    // Check backend session on mount if user is not already populated in Redux
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const loggedInUser = await currentUser();
+                if (loggedInUser) {
+                    dispatch(setUser(loggedInUser));
+                }
+            } catch (error) {
+                console.error("Navbar: Error fetching current user:", error);
+            }
+        };
+
+        if (!user) {
+            fetchCurrentUser();
+        }
+    }, [dispatch, user]);
 
     const toggleMobileMenu = () => {
         setMobileMenuOpen(!mobileMenuOpen);
     };
 
-    const handleLogout = () => {
-        setUser(null);
-        setShowProfileDropdown(false);
+    const handleLogout = async () => {
+        try {
+            await logoutUser();
+        } catch (e) {
+            console.error("Logout error", e);
+        } finally {
+            dispatch(clearUser());
+            setShowProfileDropdown(false);
+        }
     };
 
     const locations = ['Mumbai, India', 'Delhi NCR, India', 'Bengaluru, India', 'Pune, India'];
@@ -152,24 +176,37 @@ function Navbar({ cartCount = 0 }) {
                                         className="flex items-center gap-1.5 p-1 rounded-full hover:bg-white/5 transition-all duration-300 cursor-pointer"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold border border-white/10">
-                                            {user.avatar}
+                                            {user.name ? user.name[0].toUpperCase() : 'U'}
                                         </div>
                                         <FaChevronDown className={`text-gray-400 text-[9px] transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
                                     </button>
 
                                     {showProfileDropdown && (
-                                        <div className="absolute right-0 mt-2 w-52 bg-[#181818]/95 backdrop-blur-2xl border border-white/10 rounded-xl py-2 shadow-xl animate-fadeIn overflow-hidden">
-                                            <div className="px-4 py-2 border-b border-white/5 mb-1">
-                                                <p className="text-[9px] text-amber-500 font-bold uppercase tracking-wider">Logged in as</p>
-                                                <p className="text-white text-xs truncate font-medium">{user.email}</p>
+                                        <div className="absolute right-0 mt-2 w-56 bg-[#181818]/95 backdrop-blur-2xl border border-white/10 rounded-2xl py-2 shadow-2xl animate-fadeIn overflow-hidden z-50">
+                                            {/* User Details Header */}
+                                            <div className="px-4 py-3 border-b border-white/10 mb-1 bg-white/5">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className="text-white text-xs font-bold truncate flex items-center gap-1.5">
+                                                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                                        {user.name || "Foodie User"}
+                                                    </p>
+                                                    {user.role && (
+                                                        <span className="px-1.5 py-0.5 text-[8px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded uppercase tracking-wider shrink-0">
+                                                            {user.role}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-gray-400 text-[11px] truncate font-medium mt-1">
+                                                    {user.email}
+                                                </p>
                                             </div>
 
                                             <Link to="/orders" className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-300 hover:text-amber-500 hover:bg-white/5 transition-all font-medium" onClick={() => setShowProfileDropdown(false)}>
-                                                <FaHistory /> My Orders
+                                                <FaHistory className="text-amber-500" /> My Orders
                                             </Link>
 
                                             <Link to="/profile" className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-300 hover:text-amber-500 hover:bg-white/5 transition-all font-medium" onClick={() => setShowProfileDropdown(false)}>
-                                                <FaUtensils /> Restaurant Profile
+                                                <FaUtensils className="text-amber-500" /> Restaurant Profile
                                             </Link>
 
                                             <button
@@ -206,6 +243,18 @@ function Navbar({ cartCount = 0 }) {
             {/* Mobile Menu */}
             <div className={`fixed top-16 left-0 right-0 bg-[#0f0f10]/95 backdrop-blur-xl border-b border-white/5 md:hidden transition-all duration-300 ease-in-out z-[999] overflow-hidden ${mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className='px-6 py-6 space-y-4'>
+                    {/* User Profile in Mobile Menu if logged in */}
+                    {user && (
+                        <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm font-bold border border-white/10 shadow-md">
+                                {user.name ? user.name[0].toUpperCase() : (user.email ? user.email[0].toUpperCase() : 'U')}
+                            </div>
+                            <div className="overflow-hidden">
+                                <p className="text-white text-sm font-bold truncate">{user.name || "Foodie User"}</p>
+                                <p className="text-gray-400 text-xs truncate">{user.email}</p>
+                            </div>
+                        </div>
+                    )}
                     {/* Mobile Location Selector */}
                     <div className="py-2 border-b border-white/5 sm:hidden">
                         <p className="text-[10px] text-gray-400 uppercase mb-2">Deliver to:</p>
@@ -249,15 +298,13 @@ function Navbar({ cartCount = 0 }) {
                     ))}
 
                     {!user && (
-                        <button
-                            onClick={() => {
-                                setUser({ name: 'John Doe', email: 'star7foodies@gmail.com', avatar: 'S' });
-                                setMobileMenuOpen(false);
-                            }}
+                        <Link
+                            to="/login"
+                            onClick={() => setMobileMenuOpen(false)}
                             className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold cursor-pointer"
                         >
                             <FaUser /> Login
-                        </button>
+                        </Link>
                     )}
                 </div>
             </div>

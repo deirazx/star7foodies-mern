@@ -1,5 +1,7 @@
 import axios from "axios"
 
+axios.defaults.withCredentials = true;
+
 export const allFoods = async () => {
     try {
         const response = await axios.get("/api/products/");
@@ -31,5 +33,35 @@ export const registerUser = async (registerData) => {
             error.response?.data?.message ||
             "Something went wrong while registering your account. Please try again.";
         throw new Error(errorMessage);
+    }
+};
+
+export const googleLoginUser = async (googleData) => {
+    try {
+        const response = await axios.post("/api/users/google-login", googleData);
+        return response.data;
+    } catch (error) {
+        const errorMessage =
+            error.response?.data?.message ||
+            "Something went wrong while logging in with Google. Please try again.";
+        throw new Error(errorMessage);
+    }
+};
+
+export const currentUser = async () => {
+    try {
+        const response = await axios.get("/api/users/current-user");
+        return response.data?.user || response.data;
+    } catch (error) {
+        return null;
+    }
+};
+
+export const logoutUser = async () => {
+    try {
+        const response = await axios.post("/api/users/logout-user");
+        return response.data;
+    } catch (error) {
+        return null;
     }
 };
