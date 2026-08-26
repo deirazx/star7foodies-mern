@@ -114,11 +114,12 @@ function Navbar({ cartCount = 0 }) {
                         <div className='hidden md:flex items-center gap-6 lg:gap-8'>
                             {[
                                 { name: 'Home', path: '/' },
+                                user?.role === "admin" ? { name: 'Admin', path: '/admin' } : null,
                                 { name: 'Menu', path: '/menu' },
                                 { name: 'Offers', path: '/offers', badge: 'New' },
                                 { name: 'About', path: '/about' },
-                                { name: 'Contact', path: '/contact' }
-                            ].map((item) => (
+                                { name: 'Contact', path: '/contact' },
+                            ].filter(Boolean).map((item) => (
                                 <Link
                                     key={item.name}
                                     to={item.path}
@@ -279,6 +280,7 @@ function Navbar({ cartCount = 0 }) {
 
                     {[
                         { name: 'Home', path: '/' },
+                        user?.role === "admin" ? { name: 'Admin', path: '/admin' } : null,
                         { name: 'Menu', path: '/menu' },
                         { name: 'Offers', path: '/offers' },
                         { name: 'About', path: '/about' },

@@ -3,6 +3,7 @@ import Navbar from './Components/Navbar';
 import Home from './Pages/Home';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
+import About from './Pages/About';
 import { Routes, Route } from 'react-router-dom';
 
 const App = () => {
@@ -54,6 +55,7 @@ const App = () => {
                 />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Signup />} />
+                <Route path="/about" element={<About />} />
             </Routes>
 
             {/* Global Footer */}
