@@ -5,6 +5,7 @@ import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import About from './Pages/About';
 import Contact from './Pages/Contact';
+import MyOrders from './Pages/MyOrders';
 import { Routes, Route } from 'react-router-dom';
 
 const App = () => {
@@ -58,6 +59,7 @@ const App = () => {
                 <Route path="/register" element={<Signup />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/orders" element={<MyOrders />} />
             </Routes>
 
             {/* Global Footer */}

@@ -65,3 +65,13 @@ export const logoutUser = async () => {
         return null;
     }
 };
+
+export const myOrders = async () => {
+    try {
+        const response = await axios.get("/api/orders/my-orders");
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Something went wrong while getting My Orders. Please try again."
+        throw new Error(errorMessage);
+    }
+};
