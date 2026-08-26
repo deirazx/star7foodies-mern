@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Navbar from './Components/Navbar';
 import Home from './Pages/Home';
 import Login from './Pages/Login';
@@ -9,52 +9,14 @@ import MyOrders from './Pages/MyOrders';
 import { Routes, Route } from 'react-router-dom';
 
 const App = () => {
-    const [cartItems, setCartItems] = useState({});
-
-    const handleAddToCart = (id) => {
-        setCartItems(prev => ({
-            ...prev,
-            [id]: (prev[id] || 0) + 1
-        }));
-    };
-
-    const handleRemoveFromCart = (id) => {
-        setCartItems(prev => {
-            const updated = { ...prev };
-            if (updated[id] > 1) {
-                updated[id] -= 1;
-            } else {
-                delete updated[id];
-            }
-            return updated;
-        });
-    };
-
-    const clearCart = () => {
-        setCartItems({});
-    };
-
-    // Calculate total items in cart for Navbar badge
-    const totalCartCount = Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
-
     return (
         <div className="min-h-screen bg-[#0a0a0b] text-white font-sans selection:bg-amber-500 selection:text-black">
             {/* Top Navigation */}
-            <Navbar cartCount={totalCartCount} />
+            <Navbar />
 
             {/* Main Content (Routes) */}
             <Routes>
-                <Route 
-                    path="/" 
-                    element={
-                        <Home
-                            cartItems={cartItems}
-                            handleAddToCart={handleAddToCart}
-                            handleRemoveFromCart={handleRemoveFromCart}
-                            clearCart={clearCart}
-                        />
-                    } 
-                />
+                <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Signup />} />
                 <Route path="/about" element={<About />} />

@@ -17,7 +17,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setUser, clearUser } from '../Redux/Slices/auth.js';
 import { currentUser, logoutUser } from '../Api/axios';
 
-function Navbar({ cartCount = 0 }) {
+function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -25,6 +25,8 @@ function Navbar({ cartCount = 0 }) {
     const [wishlistCount, setWishlistCount] = useState(2);
 
     const user = useSelector((state) => state?.auth?.user);
+    const cartItems = useSelector((state) => state?.cart?.items || []);
+    const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
     const dispatch = useDispatch();
 
     // Check backend session on mount if user is not already populated in Redux

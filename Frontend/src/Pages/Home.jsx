@@ -8,9 +8,12 @@ import {
     FaShieldAlt,
     FaTrash,
     FaPercent,
-    FaRegDotCircle
+    FaRegDotCircle,
+    FaShoppingBag
 } from 'react-icons/fa';
 import { allFoods } from '../Api/axios';
+import { useSelector, useDispatch } from 'react-redux';
+import { addToCart, removeFromCart, clearCart } from '../Redux/Slices/cart.js';
 
 const FOODS = [
     {
@@ -88,7 +91,8 @@ const CATEGORIES = [
     { name: "Dessert", image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=150&auto=format&fit=crop&q=60" }
 ];
 
-const Home = ({ cartItems, handleAddToCart, handleRemoveFromCart, clearCart }) => {
+const Home = () => {
+    const dispatch = useDispatch();
     const [foods, setFoods] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -97,6 +101,23 @@ const Home = ({ cartItems, handleAddToCart, handleRemoveFromCart, clearCart }) =
     const [vegOnly, setVegOnly] = useState(false);
     const [highRatedOnly, setHighRatedOnly] = useState(false);
     const [sortByPrice, setSortByPrice] = useState(""); // "asc", "desc", or ""
+
+    const cartItems = useSelector((state) => state?.cart?.items || []);
+    const totalCartPrice = useSelector((state) => state?.cart?.totalCartAmount || 0);
+    const totalCartItems = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+    const handleAddToCart = (food) => {
+        console.log(food)
+        dispatch(addToCart(food));
+    };
+
+    const handleRemoveFromCart = (foodId) => {
+        dispatch(removeFromCart(foodId));
+    };
+
+    const handleClearCart = () => {
+        dispatch(clearCart());
+    };
 
     useEffect(() => {
         const fetchFoods = async () => {
@@ -140,12 +161,6 @@ const Home = ({ cartItems, handleAddToCart, handleRemoveFromCart, clearCart }) =
     } else if (sortByPrice === "desc") {
         filteredFoods.sort((a, b) => b.price - a.price);
     }
-
-    const totalCartItems = Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
-    const totalCartPrice = Object.entries(cartItems).reduce((sum, [id, qty]) => {
-        const food = foods.find(f => f._id === id || f.id === parseInt(id));
-        return sum + (food ? food.price * qty : 0);
-    }, 0);
 
     const hasActiveFilters = selectedCategory || vegOnly || highRatedOnly || sortByPrice;
 
@@ -363,7 +378,8 @@ const Home = ({ cartItems, handleAddToCart, handleRemoveFromCart, clearCart }) =
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                         {filteredFoods.map((food) => {
                             const foodId = food._id || food.id;
-                            const qty = cartItems[foodId] || 0;
+                            const existingCartItem = cartItems.find((item) => item._id === foodId || item.id === foodId);
+                            const qty = existingCartItem ? existingCartItem.quantity : 0;
                             const rating = food.rating || (4.0 + (food.name.length % 10) / 10).toFixed(1);
                             const time = food.time || ((food.price % 15) + 15) + " mins";
                             const isVeg = food.isVeg !== undefined ? food.isVeg : !(/chicken|beef|meat|mutton|pork|fish|egg/i.test(food.name));
@@ -442,7 +458,7 @@ const Home = ({ cartItems, handleAddToCart, handleRemoveFromCart, clearCart }) =
                                             {/* Interactive Swiggy Style ADD button */}
                                             {qty === 0 ? (
                                                 <button
-                                                    onClick={() => handleAddToCart(foodId)}
+                                                    onClick={() => handleAddToCart(food)}
                                                     className="px-4 py-1.5 border border-amber-500/40 hover:border-amber-500 text-amber-500 font-black text-xs bg-amber-500/5 hover:bg-amber-500 hover:text-white rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                                 >
                                                     ADD
@@ -459,7 +475,7 @@ const Home = ({ cartItems, handleAddToCart, handleRemoveFromCart, clearCart }) =
                                                         {qty}
                                                     </span>
                                                     <button
-                                                        onClick={() => handleAddToCart(foodId)}
+                                                        onClick={() => handleAddToCart(food)}
                                                         className="px-2.5 py-1.5 hover:bg-amber-600 transition-all font-bold text-xs cursor-pointer"
                                                     >
                                                         +
@@ -537,7 +553,7 @@ const Home = ({ cartItems, handleAddToCart, handleRemoveFromCart, clearCart }) =
 
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={clearCart}
+                            onClick={handleClearCart}
                             className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-xs flex items-center gap-1 font-semibold cursor-pointer"
                         >
                             <FaTrash className="text-[10px]" /> Clear
