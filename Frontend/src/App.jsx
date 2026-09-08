@@ -7,6 +7,7 @@ import About from './Pages/About';
 import Contact from './Pages/Contact';
 import MyOrders from './Pages/MyOrders';
 import { Routes, Route } from 'react-router-dom';
+import Cart from './Pages/Cart';
 
 const App = () => {
     return (
@@ -22,6 +23,7 @@ const App = () => {
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/orders" element={<MyOrders />} />
+                <Route path='/cart' element={<Cart />} />
             </Routes>
 
             {/* Global Footer */}

@@ -160,14 +160,14 @@ function Navbar() {
                             </button>
 
                             {/* Cart */}
-                            <button className="relative p-2 text-gray-300 hover:text-amber-500 transition-colors cursor-pointer group">
+                            <Link to={"/cart"} className="relative p-2 text-gray-300 hover:text-amber-500 transition-colors cursor-pointer group">
                                 <FaShoppingBag className="text-base group-hover:scale-110 transition-transform duration-200" />
                                 {cartCount > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-amber-500 text-[8px] text-white font-bold rounded-full flex items-center justify-center leading-none">
                                         {cartCount}
                                     </span>
                                 )}
-                            </button>
+                            </Link>
 
                             <div className="h-5 w-px bg-white/10 hidden sm:block"></div>
 
