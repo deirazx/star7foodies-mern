@@ -5,7 +5,7 @@ const { Admin } = require("../middleware/admin.middleware");
 
 const router = express.Router();
 
-router.post("/", protect, Admin, createOrder);
+router.post("/", protect, createOrder);
 router.get("/", protect, Admin, getAllOrders);
 router.get("/my-orders", protect, myOrders);
 router.put("/", protect, Admin, updateOrderStatus);

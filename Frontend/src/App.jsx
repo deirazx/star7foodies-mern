@@ -10,6 +10,7 @@ import { Routes, Route } from 'react-router-dom';
 import Cart from './Pages/Cart';
 import Admin from './Pages/Admin';
 import Menu from './Pages/Menu';
+import Checkout from './Pages/Checkout';
 
 const App = () => {
     return (
@@ -27,12 +28,13 @@ const App = () => {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/orders" element={<MyOrders />} />
                 <Route path='/cart' element={<Cart />} />
+                <Route path='/checkout' element={<Checkout />} />
                 <Route path='/admin' element={<Admin />} />
             </Routes>
 
             {/* Global Footer */}
             <footer className="bg-[#080809] border-t border-white/5 py-8 mt-12 text-center text-xs text-gray-500 mb-4 md:mb-0">
-                <p className="font-semibold text-gray-400">Star7 Foodies</p>
+                <p className="font-semibold text-gray-400">Star7Foodies</p>
                 <p className="mt-1">© 2026. Made with ❤️ for Star7Foodies - Swiggy & Blinkit Inspired UI.</p>
             </footer>
 

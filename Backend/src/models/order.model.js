@@ -37,12 +37,18 @@ const orderSchema = new mongoose.Schema({
     },
 
     address: {
+        name: { type: String },
         street: { type: String, required: true },
         city: { type: String, required: true },
         state: { type: String },
         postalCode: { type: String, required: true },
         country: { type: String, default: "india" },
         phone: { type: String, required: true }
+    },
+
+    paymentMethod: {
+        type: String,
+        default: "COD"
     },
 
     status: {

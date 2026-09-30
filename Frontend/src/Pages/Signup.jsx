@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     FaUser,
     FaEnvelope,
@@ -27,6 +27,9 @@ const Signup = () => {
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const redirectUrl = searchParams.get('redirect') || '/';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -34,11 +37,10 @@ const Signup = () => {
         setLoading(true);
         try {
             await registerUser({ name, email, password });
-            alert(`Account created successfully for ${email}!`);
             setName("");
             setEmail("");
             setPassword("");
-            navigate('/login');
+            navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
         } catch (err) {
             setError(err.message || "Failed to create account. Please try again.");
         } finally {
@@ -59,7 +61,7 @@ const Signup = () => {
             const user = response.user ? response.user : response;
 
             dispatch(setUser(user));
-            navigate('/');
+            navigate(redirectUrl);
         } catch (err) {
             setError(err.message || "Google Sign-Up failed. Please try again.");
         } finally {
@@ -205,7 +207,7 @@ const Signup = () => {
                 {/* Footer Link */}
                 <div className="text-center text-xs text-gray-400 pt-3 border-t border-white/5">
                     Already have an account?{' '}
-                    <Link to="/login" className="text-amber-400 font-bold hover:underline">
+                    <Link to={redirectUrl !== '/' ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'} className="text-amber-400 font-bold hover:underline">
                         Sign In
                     </Link>
                 </div>

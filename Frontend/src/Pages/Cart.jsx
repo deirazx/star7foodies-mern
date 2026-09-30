@@ -354,10 +354,13 @@ const Cart = () => {
                     </div>
 
                     {/* Checkout Button */}
-                    <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm rounded-2xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <Link
+                        to="/checkout"
+                        className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm rounded-2xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
                         Proceed to Checkout
                         <FaArrowRight className="text-xs" />
-                    </button>
+                    </Link>
 
                     <p className="text-center text-[10px] text-gray-500 px-4">
                         By placing your order, you agree to our{' '}

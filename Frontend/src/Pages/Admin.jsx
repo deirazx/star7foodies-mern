@@ -913,14 +913,14 @@ const Admin = () => {
                                 const count = tab.id === 'all'
                                     ? orderMetrics.total
                                     : tab.id === 'Pending'
-                                    ? orderMetrics.pending
-                                    : tab.id === 'Preparing'
-                                    ? orderMetrics.preparing
-                                    : tab.id === 'Out for Delivery'
-                                    ? orderMetrics.outForDelivery
-                                    : tab.id === 'Delivered'
-                                    ? orderMetrics.delivered
-                                    : orderMetrics.cancelled;
+                                        ? orderMetrics.pending
+                                        : tab.id === 'Preparing'
+                                            ? orderMetrics.preparing
+                                            : tab.id === 'Out for Delivery'
+                                                ? orderMetrics.outForDelivery
+                                                : tab.id === 'Delivered'
+                                                    ? orderMetrics.delivered
+                                                    : orderMetrics.cancelled;
 
                                 const isActive = orderStatusFilter === tab.id;
 
@@ -1292,7 +1292,7 @@ const Admin = () => {
                                     <Utensils className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-extrabold text-white text-lg tracking-tight">Star7 Foodies Receipt</h3>
+                                    <h3 className="font-extrabold text-white text-lg tracking-tight">Star7Foodies Receipt</h3>
                                     <p className="text-[11px] text-gray-400">Kitchen Order Ticket & Customer Invoice</p>
                                 </div>
                             </div>
@@ -1395,7 +1395,7 @@ const Admin = () => {
 
                             {/* Footer message */}
                             <p className="text-center text-[10px] text-gray-500 pt-1">
-                                Thank you for dining with Star7 Foodies! • Powered by Star7 Kitchen Management System
+                                Thank you for dining with Star7Foodies! • Powered by Star7Foodies Kitchen Management System
                             </p>
                         </div>
 

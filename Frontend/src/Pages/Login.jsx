@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-    FaEnvelope, 
-    FaLock, 
-    FaEye, 
-    FaEyeSlash, 
-    FaGoogle, 
-    FaUtensils, 
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import {
+    FaEnvelope,
+    FaLock,
+    FaEye,
+    FaEyeSlash,
+    FaGoogle,
+    FaUtensils,
     FaArrowRight,
     FaExclamationCircle
 } from 'react-icons/fa';
@@ -26,6 +26,9 @@ const Login = () => {
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const redirectUrl = searchParams.get('redirect') || '/';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,7 +38,7 @@ const Login = () => {
             const response = await loginUser({ email, password });
             const user = response.user ? response.user : response;
             dispatch(setUser(user));
-            navigate('/');
+            navigate(redirectUrl);
         } catch (err) {
             setError(err.message || "Something went wrong. Please check your credentials.");
         } finally {
@@ -54,9 +57,9 @@ const Login = () => {
             // Sync auth details with MERN backend
             const response = await googleLoginUser({ name, email });
             const user = response.user ? response.user : response;
-            
+
             dispatch(setUser(user));
-            navigate('/');
+            navigate(redirectUrl);
         } catch (err) {
             setError(err.message || "Google Sign-In failed. Please try again.");
         } finally {
@@ -77,13 +80,13 @@ const Login = () => {
     return (
         <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 py-8 relative bg-[#0a0a0b]">
             {/* Ambient Background Glow */}
-            <div 
+            <div
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl pointer-events-none"
                 style={{ width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, rgba(0,0,0,0) 70%)' }}
             ></div>
 
             {/* Login Card */}
-            <div 
+            <div
                 className="bg-[#121214] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl relative z-10 space-y-6 animate-fadeIn"
                 style={{ maxWidth: '420px', width: '100%' }}
             >
@@ -109,8 +112,8 @@ const Login = () => {
                 )}
 
                 {/* Google Sign In Button */}
-                <button 
-                    type="button" 
+                <button
+                    type="button"
                     onClick={handleGoogleLogin}
                     disabled={loading}
                     className={`w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -135,8 +138,8 @@ const Login = () => {
                         </label>
                         <div className="relative flex items-center">
                             <FaEnvelope className="absolute left-3 text-gray-400 text-xs pointer-events-none z-10" />
-                            <input 
-                                type="email" 
+                            <input
+                                type="email"
                                 value={email}
                                 onChange={handleEmailChange}
                                 placeholder="name@example.com"
@@ -160,8 +163,8 @@ const Login = () => {
                         </div>
                         <div className="relative flex items-center">
                             <FaLock className="absolute left-3 text-gray-400 text-xs pointer-events-none z-10" />
-                            <input 
-                                type={showPassword ? "text" : "password"} 
+                            <input
+                                type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={handlePasswordChange}
                                 placeholder="••••••••"
@@ -182,8 +185,8 @@ const Login = () => {
 
                     {/* Remember Me */}
                     <div className="flex items-center gap-2 pt-1">
-                        <input 
-                            type="checkbox" 
+                        <input
+                            type="checkbox"
                             id="remember"
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
@@ -196,8 +199,8 @@ const Login = () => {
                     </div>
 
                     {/* Submit Button */}
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={loading}
                         className={`w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-2 ${loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
@@ -208,8 +211,8 @@ const Login = () => {
 
                 {/* Footer Link */}
                 <div className="text-center text-xs text-gray-400 pt-3 border-t border-white/5">
-                    New to Star7 Foodies?{' '}
-                    <Link to="/register" className="text-amber-400 font-bold hover:underline">
+                    New to Star7Foodies?{' '}
+                    <Link to={redirectUrl !== '/' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'} className="text-amber-400 font-bold hover:underline">
                         Create an account
                     </Link>
                 </div>

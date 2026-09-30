@@ -25,7 +25,7 @@ const Contact = () => {
         {
             icon: <FaMapMarkerAlt className="text-amber-500 text-lg" />,
             title: 'Headquarters',
-            lines: ['Star7 Foodies Tech Park', 'Sector 62, Noida, UP, India'],
+            lines: ['Star7Foodies Tech Park', 'Sector 62, Noida, UP, India'],
             label: 'Pin: 201301'
         },
         {

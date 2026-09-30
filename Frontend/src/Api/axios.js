@@ -77,6 +77,16 @@ export const myOrders = async () => {
 };
 
 
+export const createOrderApi = async (orderData) => {
+    try {
+        const response = await axios.post("/api/orders", orderData);
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Something went wrong while placing your order. Please try again.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
 export const allOrders = async () => {
     try {
         const response = await axios.get("/api/orders");

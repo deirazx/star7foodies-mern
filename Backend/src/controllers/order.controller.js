@@ -38,7 +38,8 @@ const createOrder = async (req, res) => {
             userId: resolvedUserId,
             items,
             address,
-            totalCartPrice
+            totalCartPrice,
+            paymentMethod: req.body.paymentMethod || "COD"
         });
 
         const order = await newOrder.save();
