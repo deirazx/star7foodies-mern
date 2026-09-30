@@ -9,5 +9,6 @@ router.post("/", protect, Admin, createOrder);
 router.get("/", protect, Admin, getAllOrders);
 router.get("/my-orders", protect, myOrders);
 router.put("/", protect, Admin, updateOrderStatus);
+router.put("/:id", protect, Admin, updateOrderStatus);
 
 module.exports = router;

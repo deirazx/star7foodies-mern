@@ -1,5 +1,7 @@
 const Order = require("../models/order.model");
 const mongoose = require("mongoose");
+require("../models/auth.model");
+require("../models/product.model");
 
 const createOrder = async (req, res) => {
     try {
@@ -56,22 +58,19 @@ const createOrder = async (req, res) => {
 
 const getAllOrders = async (req, res) => {
     try {
-        const allOrders = await Order.find();
-
-        if (allOrders.length === 0) {
-            return res.status(404).json({
-                message: "No orders found."
-            });
-        }
+        const allOrders = await Order.find()
+            .populate("items.productId")
+            .populate("userId", "name email phone")
+            .sort({ createdAt: -1 });
 
         return res.status(200).json({
             message: "Successfully retrieved all orders.",
-            orders: allOrders
+            orders: allOrders || []
         });
     } catch (error) {
         console.error("Error while retrieving all orders:", error);
         return res.status(500).json({
-            message: "Something went wrong while retrieving all orders. Please try again."
+            message: error.message || "Something went wrong while retrieving all orders. Please try again."
         });
     }
 }
