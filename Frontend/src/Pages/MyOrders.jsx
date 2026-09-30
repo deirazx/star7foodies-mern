@@ -129,7 +129,7 @@ const MyOrders = () => {
     return (
         <div className="min-h-[calc(100vh-5rem)] bg-[#0a0a0b] text-white pt-24 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             {/* Ambient Background Glow */}
-            <div 
+            <div
                 className="absolute top-1/4 left-1/2 -translate-x-1/2 rounded-full blur-3xl pointer-events-none"
                 style={{ width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(245,158,11,0.03) 0%, rgba(0,0,0,0) 70%)' }}
             ></div>
@@ -148,11 +148,10 @@ const MyOrders = () => {
                             <button
                                 key={filter}
                                 onClick={() => setActiveFilter(filter)}
-                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
-                                    activeFilter === filter
-                                        ? 'bg-amber-500 border-amber-500 text-black shadow-lg shadow-orange-500/20'
-                                        : 'bg-[#121214] border-white/5 text-gray-300 hover:text-white hover:border-white/10'
-                                }`}
+                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${activeFilter === filter
+                                    ? 'bg-amber-500 border-amber-500 text-black shadow-lg shadow-orange-500/20'
+                                    : 'bg-[#121214] border-white/5 text-gray-300 hover:text-white hover:border-white/10'
+                                    }`}
                             >
                                 {filter}
                             </button>
@@ -165,11 +164,11 @@ const MyOrders = () => {
                     {filteredOrders.map((order, idx) => {
                         const statusObj = getStatusStyle(order.status);
                         const orderId = order._id || order.id;
-                        const orderDate = order.createdAt 
+                        const orderDate = order.createdAt
                             ? new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
                             : order.date;
                         const totalCartPrice = order.totalCartPrice || order.total;
-                        
+
                         // Address string builder
                         let addressString = order.address;
                         if (typeof order.address === 'object' && order.address !== null) {
@@ -177,8 +176,8 @@ const MyOrders = () => {
                         }
 
                         return (
-                            <div 
-                                key={orderId} 
+                            <div
+                                key={orderId}
                                 style={{ animationDelay: `${idx * 0.05}s` }}
                                 className="bg-[#121214]/60 border border-white/10 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl hover:border-white/20 transition-all duration-300 animate-slideUp"
                             >
@@ -218,9 +217,9 @@ const MyOrders = () => {
                                         return (
                                             <div key={itemIdx} className="flex justify-between items-center gap-4 py-1">
                                                 <div className="flex items-center gap-4">
-                                                    <img 
-                                                        src={itemImage} 
-                                                        alt={itemName} 
+                                                    <img
+                                                        src={itemImage}
+                                                        alt={itemName}
                                                         className="w-14 h-14 rounded-xl object-cover border border-white/10"
                                                     />
                                                     <div className="space-y-0.5">

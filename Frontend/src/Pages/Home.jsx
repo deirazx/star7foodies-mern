@@ -382,11 +382,11 @@ const Home = () => {
                             const qty = existingCartItem ? existingCartItem.quantity : 0;
                             const rating = food.rating || (4.0 + (food.name.length % 10) / 10).toFixed(1);
                             const time = food.time || ((food.price % 15) + 15) + " mins";
-                            const isVeg = food.isVeg !== undefined ? food.isVeg : !(/chicken|beef|meat|mutton|pork|fish|egg/i.test(food.name));
-                            const imageUrl = food.imageUrl || food.image;
+                            const imageUrl = food.imageUrl || food.image_url || food.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop";
                             const description = food.description || food.desc;
                             const discount = food.discount || (food.price > 200 ? "20% OFF" : "10% OFF");
                             const bestseller = food.bestseller !== undefined ? food.bestseller : (rating >= 4.5);
+                            const isVeg = food.isVeg !== undefined ? food.isVeg : !(/chicken|beef|meat|mutton|pork|fish|egg/i.test(food.name));
 
                             return (
                                 <div

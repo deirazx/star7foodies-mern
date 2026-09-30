@@ -75,3 +75,84 @@ export const myOrders = async () => {
         throw new Error(errorMessage);
     }
 };
+
+
+export const allOrders = async () => {
+    try {
+        const response = await axios.get("/api/orders");
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Something went wrong while getting All Orders. Please try again.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
+export const updateOrderStatusApi = async (id, status) => {
+    try {
+        const response = await axios.put(`/api/orders/${id}`, { id, status });
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Failed to update order status.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
+// ==========================================
+// Admin Menu Management API Functions
+// ==========================================
+
+export const getAdminProducts = async (params = {}) => {
+    try {
+        const response = await axios.get("/api/products/admin", { params });
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Failed to load admin menu items.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
+export const createProductApi = async (formData) => {
+    try {
+        const response = await axios.post("/api/products", formData, {
+            headers: formData instanceof FormData ? { "Content-Type": "multipart/form-data" } : {}
+        });
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Failed to create menu item.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
+export const updateProductApi = async (id, formData) => {
+    try {
+        const response = await axios.put(`/api/products/${id}`, formData, {
+            headers: formData instanceof FormData ? { "Content-Type": "multipart/form-data" } : {}
+        });
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Failed to update menu item.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
+export const deleteProductApi = async (id, permanent = false) => {
+    try {
+        const response = await axios.delete(`/api/products/${id}`, {
+            params: { permanent }
+        });
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Failed to delete/archive menu item.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
+export const toggleProductStatusApi = async (id) => {
+    try {
+        const response = await axios.patch(`/api/products/${id}/toggle-status`);
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Failed to toggle item availability.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
