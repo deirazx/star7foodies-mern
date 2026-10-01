@@ -1,262 +1,462 @@
-import React, { useEffect, useState } from 'react';
-import { FaCalendarAlt, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
-import { myOrders } from '../Api/axios';
+import React, { useEffect, useState, useMemo } from 'react';
+import {
+    FaCalendarAlt,
+    FaMapMarkerAlt,
+    FaClock,
+    FaShoppingBag,
+    FaBan,
+    FaCheckCircle,
+    FaUtensils,
+    FaMotorcycle,
+    FaPhoneAlt,
+    FaUser,
+    FaExclamationTriangle,
+    FaReceipt
+} from 'react-icons/fa';
+import { myOrders, cancelOrderApi } from '../Api/axios';
+import { Link } from 'react-router-dom';
+
+const DISH_FALLBACK_IMAGES = {
+    biryani: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60",
+    pizza: "https://images.unsplash.com/photo-1601924582970-9238b4ead50c?w=500&auto=format&fit=crop&q=60",
+    burger: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
+    paneer: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=60",
+    naan: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=60",
+    manchurian: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500&auto=format&fit=crop&q=60",
+    default: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+};
+
+const getDishImage = (item) => {
+    // 1. Try real product image from populated database reference
+    const p = item.productId;
+    if (p && typeof p === 'object') {
+        if (p.image_url) return p.image_url;
+        if (p.imageUrl) return p.imageUrl;
+        if (p.image) return p.image;
+    }
+
+    // 2. Try direct item image
+    if (item.image_url) return item.image_url;
+    if (item.imageUrl) return item.imageUrl;
+    if (item.image) return item.image;
+
+    // 3. Fallback based on name keywords
+    const name = (item.name || p?.name || '').toLowerCase();
+    if (name.includes('biryani')) return DISH_FALLBACK_IMAGES.biryani;
+    if (name.includes('pizza')) return DISH_FALLBACK_IMAGES.pizza;
+    if (name.includes('burger')) return DISH_FALLBACK_IMAGES.burger;
+    if (name.includes('paneer')) return DISH_FALLBACK_IMAGES.paneer;
+    if (name.includes('naan') || name.includes('roti')) return DISH_FALLBACK_IMAGES.naan;
+    if (name.includes('manchurian') || name.includes('chinese')) return DISH_FALLBACK_IMAGES.manchurian;
+
+    return DISH_FALLBACK_IMAGES.default;
+};
 
 const MyOrders = () => {
     const [activeFilter, setActiveFilter] = useState('All');
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [cancellingId, setCancellingId] = useState(null);
+    const [cancelModalOrder, setCancelModalOrder] = useState(null);
+    const [notification, setNotification] = useState(null);
 
-    const filters = ['All', 'In Progress', 'Delivered', 'Cancelled'];
+    const filters = ['All', 'Active Orders', 'Delivered', 'Cancelled'];
 
-    const mockOrders = [
-        {
-            id: '6A7452DADF804B431B4E8495',
-            date: 'Aug 6, 2026',
-            status: 'PENDING',
-            statusColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-            statusIcon: <FaClock className="text-[10px] animate-pulse" />,
-            total: 1997,
-            address: '123 Main Street, Sector 4, Noida, Uttar Pradesh, 201301',
-            items: [
-                {
-                    name: 'Gourmet Cheese Pizza',
-                    category: 'SINGLE SERVING',
-                    qty: 2,
-                    price: 998,
-                    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=80'
-                }
-            ]
-        },
-        {
-            id: '6A7744154736323D15DC5064',
-            date: 'Aug 8, 2026',
-            status: 'PENDING',
-            statusColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-            statusIcon: <FaClock className="text-[10px] animate-pulse" />,
-            total: 90,
-            address: '123 Main Street, Sector 4, Noida, Uttar Pradesh, 201301',
-            items: [
-                {
-                    name: 'Chocolate Lava Cake',
-                    category: 'SINGLE SERVING',
-                    qty: 1,
-                    price: 90,
-                    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=80'
-                }
-            ]
-        },
-        {
-            id: '6A7892154736323D15DC8910',
-            date: 'Aug 10, 2026',
-            status: 'DELIVERED',
-            statusColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-            statusIcon: null,
-            total: 350,
-            address: '123 Main Street, Sector 4, Noida, Uttar Pradesh, 201301',
-            items: [
-                {
-                    name: 'Veg Loaded Burger',
-                    category: 'DOUBLE SERVING',
-                    qty: 2,
-                    price: 150,
-                    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=80'
-                },
-                {
-                    name: 'Crispy French Fries',
-                    category: 'SINGLE SERVING',
-                    qty: 1,
-                    price: 50,
-                    image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&q=80&w=80'
-                }
-            ]
-        }
-    ];
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            const response = await myOrders();
+            const fetched = response?.orders || response || [];
 
-    useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                const response = await myOrders();
-                const fetchedOrders = response?.orders || response || [];
-                setOrders(fetchedOrders);
-            } catch (error) {
-                console.error("Error fetching orders:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchOrders();
-    }, []);
+            // Sort newest first by creation timestamp
+            const sorted = [...fetched].sort((a, b) => {
+                const dateA = new Date(a.createdAt || a.date || 0).getTime();
+                const dateB = new Date(b.createdAt || b.date || 0).getTime();
+                return dateB - dateA;
+            });
 
-    // Helper to format database status into styling
-    const getStatusStyle = (status) => {
-        const lower = status ? status.toLowerCase() : 'pending';
-        if (lower === 'delivered') {
-            return {
-                text: 'DELIVERED',
-                color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-                icon: null
-            };
-        } else if (lower === 'cancelled') {
-            return {
-                text: 'CANCELLED',
-                color: 'text-red-500 bg-red-500/10 border-red-500/20',
-                icon: null
-            };
-        } else {
-            return {
-                text: status ? status.toUpperCase() : 'PENDING',
-                color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-                icon: <FaClock className="text-[10px] animate-pulse" />
-            };
+            setOrders(sorted);
+        } catch (error) {
+            console.error("Error fetching customer orders:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    // Fallback to mockOrders if backend returns empty list (design preview fallback)
-    const displayOrders = orders && orders.length > 0 ? orders : mockOrders;
+    useEffect(() => {
+        fetchOrders();
+    }, []);
 
-    const filteredOrders = displayOrders.filter(order => {
-        const statusText = order.status ? order.status.toLowerCase() : '';
-        if (activeFilter === 'All') return true;
-        if (activeFilter === 'In Progress') {
-            return statusText === 'pending' || statusText === 'preparing' || statusText === 'out for delivery';
+    const showNotice = (msg, isErr = false) => {
+        setNotification({ text: msg, isError: isErr });
+        setTimeout(() => setNotification(null), 4000);
+    };
+
+    // Handle Order Cancellation
+    const handleConfirmCancel = async () => {
+        if (!cancelModalOrder) return;
+        const orderId = cancelModalOrder._id || cancelModalOrder.id;
+
+        try {
+            setCancellingId(orderId);
+            await cancelOrderApi(orderId);
+            setOrders(prev =>
+                prev.map(o => (o._id === orderId || o.id === orderId) ? { ...o, status: "Cancelled" } : o)
+            );
+            showNotice("Your order has been cancelled successfully.");
+            setCancelModalOrder(null);
+        } catch (err) {
+            showNotice(err.message || "Failed to cancel order.", true);
+        } finally {
+            setCancellingId(null);
         }
-        if (activeFilter === 'Delivered') return statusText === 'delivered';
-        if (activeFilter === 'Cancelled') return statusText === 'cancelled';
-        return true;
-    });
+    };
+
+    // Helper to format status pill
+    const getStatusBadge = (status) => {
+        const s = (status || 'Pending').toLowerCase();
+        if (s === 'delivered') {
+            return {
+                label: 'Delivered',
+                classes: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+                icon: <FaCheckCircle className="text-xs" />
+            };
+        }
+        if (s === 'cancelled') {
+            return {
+                label: 'Cancelled',
+                classes: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+                icon: <FaBan className="text-xs" />
+            };
+        }
+        if (s === 'preparing') {
+            return {
+                label: 'Kitchen Preparing',
+                classes: 'text-sky-400 bg-sky-500/10 border-sky-500/30',
+                icon: <FaUtensils className="text-xs animate-spin" />
+            };
+        }
+        if (s === 'out for delivery') {
+            return {
+                label: 'Out for Delivery',
+                classes: 'text-purple-400 bg-purple-500/10 border-purple-500/30',
+                icon: <FaMotorcycle className="text-xs animate-bounce" />
+            };
+        }
+        return {
+            label: 'Order Placed • Pending',
+            classes: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+            icon: <FaClock className="text-xs animate-pulse" />
+        };
+    };
+
+    // Filter orders
+    const filteredOrders = useMemo(() => {
+        return orders.filter(order => {
+            const st = (order.status || 'Pending').toLowerCase();
+            if (activeFilter.startsWith('All')) return true;
+            if (activeFilter.startsWith('Active')) {
+                return st === 'pending' || st === 'preparing' || st === 'out for delivery';
+            }
+            if (activeFilter.startsWith('Delivered')) {
+                return st === 'delivered';
+            }
+            if (activeFilter.startsWith('Cancelled')) {
+                return st === 'cancelled';
+            }
+            return true;
+        });
+    }, [orders, activeFilter]);
 
     return (
-        <div className="min-h-[calc(100vh-5rem)] bg-[#0a0a0b] text-white pt-24 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-            {/* Ambient Background Glow */}
+        <div className="min-h-screen bg-[#0a0a0b] text-white pt-20 md:pt-24 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+            {/* Ambient Background Glows */}
             <div
                 className="absolute top-1/4 left-1/2 -translate-x-1/2 rounded-full blur-3xl pointer-events-none"
-                style={{ width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(245,158,11,0.03) 0%, rgba(0,0,0,0) 70%)' }}
+                style={{ width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, rgba(0,0,0,0) 70%)' }}
             ></div>
 
-            <div className="max-w-6xl mx-auto space-y-10 relative z-10 animate-fadeIn">
-                {/* Header with Filter Pills */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-black tracking-tight text-white">My Orders</h1>
-                        <p className="text-xs sm:text-sm text-gray-400">Track your active orders and review order history.</p>
+            <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 relative z-10">
+                {/* Header & Tabs */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/8 pb-6">
+                    <div>
+                        <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+                            <FaReceipt />
+                            <span>Customer Order History</span>
+                        </div>
+                        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+                            My Orders
+                        </h1>
+                        <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                            Track live kitchen preparation, delivery progress, and past receipts.
+                        </p>
                     </div>
 
                     {/* Filter Pills */}
-                    <div className="flex flex-wrap gap-2.5">
-                        {filters.map((filter) => (
+                    <div className="flex flex-wrap gap-2">
+                        {filters.map((f) => (
                             <button
-                                key={filter}
-                                onClick={() => setActiveFilter(filter)}
-                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${activeFilter === filter
-                                    ? 'bg-amber-500 border-amber-500 text-black shadow-lg shadow-orange-500/20'
-                                    : 'bg-[#121214] border-white/5 text-gray-300 hover:text-white hover:border-white/10'
-                                    }`}
+                                key={f}
+                                onClick={() => setActiveFilter(f)}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                                    activeFilter === f
+                                        ? 'bg-amber-500 text-black border-amber-500 shadow-md shadow-amber-500/20'
+                                        : 'bg-[#121214] text-gray-300 border-white/8 hover:border-white/20 hover:text-white'
+                                }`}
                             >
-                                {filter}
+                                {f}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* Orders List Container */}
-                <div className="space-y-6">
-                    {filteredOrders.map((order, idx) => {
-                        const statusObj = getStatusStyle(order.status);
-                        const orderId = order._id || order.id;
-                        const orderDate = order.createdAt
-                            ? new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                            : order.date;
-                        const totalCartPrice = order.totalCartPrice || order.total;
+                {/* Toast Notification */}
+                {notification && (
+                    <div className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2 border animate-fadeIn ${
+                        notification.isError
+                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    }`}>
+                        {notification.isError ? <FaExclamationTriangle /> : <FaCheckCircle />}
+                        <span>{notification.text}</span>
+                    </div>
+                )}
 
-                        // Address string builder
-                        let addressString = order.address;
-                        if (typeof order.address === 'object' && order.address !== null) {
-                            addressString = `${order.address.street || ''}, ${order.address.city || ''}, ${order.address.state || ''} - ${order.address.postalCode || ''}`;
-                        }
+                {/* Orders Content */}
+                {loading ? (
+                    <div className="py-20 text-center space-y-3 bg-[#121214] border border-white/8 rounded-3xl">
+                        <div className="w-10 h-10 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                        <p className="text-sm font-bold text-white">Loading your orders...</p>
+                    </div>
+                ) : filteredOrders.length === 0 ? (
+                    <div className="py-20 text-center bg-[#121214] border border-white/8 rounded-3xl space-y-4 px-4">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
+                            <FaShoppingBag className="text-2xl" />
+                        </div>
+                        <h3 className="text-lg font-extrabold text-white">No Orders Found</h3>
+                        <p className="text-xs text-gray-400 max-w-sm mx-auto">
+                            {activeFilter === 'All'
+                                ? "You haven't placed any food orders yet. Browse our delicious village menu and treat yourself!"
+                                : `No orders found with status "${activeFilter}".`}
+                        </p>
+                        <Link
+                            to="/menu"
+                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <FaUtensils className="text-xs" />
+                            <span>Explore Menu</span>
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="space-y-5">
+                        {filteredOrders.map((order, idx) => {
+                            const orderId = order._id || order.id || `order-${idx}`;
+                            const status = order.status || 'Pending';
+                            const badge = getStatusBadge(status);
+                            const canCancel = status.toLowerCase() === 'pending';
+                            const dateStr = order.createdAt
+                                ? new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })
+                                : order.date || 'Recent';
 
-                        return (
-                            <div
-                                key={orderId}
-                                style={{ animationDelay: `${idx * 0.05}s` }}
-                                className="bg-[#121214]/60 border border-white/10 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl hover:border-white/20 transition-all duration-300 animate-slideUp"
-                            >
-                                {/* Card Top Row: ID, Status and Total */}
-                                <div className="flex flex-wrap justify-between items-start gap-4 pb-4 border-b border-white/5">
-                                    <div className="space-y-1.5">
-                                        <div className="flex flex-wrap items-center gap-2.5">
-                                            <span className="text-xs text-gray-300 font-bold tracking-wide">
-                                                ID: <span className="text-white">{orderId}</span>
-                                            </span>
-                                            <span className={`px-2.5 py-0.5 text-[9px] font-black uppercase rounded-full border flex items-center gap-1 ${statusObj.color}`}>
-                                                {statusObj.icon}
-                                                {statusObj.text}
-                                            </span>
+                            const address = order.address || {};
+                            const recipientName = address.name || "Customer";
+                            const recipientPhone = address.phone;
+                            const fullAddress = [
+                                address.street,
+                                address.city,
+                                address.state,
+                                address.postalCode ? `PIN: ${address.postalCode}` : null
+                            ].filter(Boolean).join(', ');
+
+                            const paymentMethod = order.paymentMethod === 'COD' ? 'Cash on Delivery' : (order.paymentMethod || 'Online Paid');
+                            const totalAmount = order.totalCartPrice || order.total || 0;
+
+                            return (
+                                <div
+                                    key={orderId}
+                                    className="bg-[#121214] border border-white/8 hover:border-amber-500/20 rounded-3xl p-5 sm:p-7 shadow-xl transition-all space-y-5"
+                                >
+                                    {/* ── 1. Top Bar: Order ID, Timestamp, Status Pill ── */}
+                                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/8">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-mono font-bold text-amber-400">
+                                                    #{orderId.slice(-8).toUpperCase()}
+                                                </span>
+                                                <span className="text-gray-600 text-xs">•</span>
+                                                <span className="text-xs text-gray-400 flex items-center gap-1 font-medium">
+                                                    <FaCalendarAlt className="text-[10px] text-gray-500" />
+                                                    {dateStr}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <p className="text-[11px] text-gray-400 flex items-center gap-1.5 font-medium">
-                                            <FaCalendarAlt className="text-[10px]" />
-                                            Placed on {orderDate}
-                                        </p>
+
+                                        {/* Status Pill Badge */}
+                                        <div className={`px-3 py-1 rounded-xl text-xs font-bold border flex items-center gap-1.5 ${badge.classes}`}>
+                                            {badge.icon}
+                                            <span>{badge.label}</span>
+                                        </div>
                                     </div>
 
-                                    <div className="text-right">
-                                        <span className="text-[9px] text-gray-400 font-black uppercase tracking-wider block">Total Amount</span>
-                                        <span className="text-xl font-black text-amber-500">₹{totalCartPrice}</span>
-                                    </div>
-                                </div>
+                                    {/* ── 2. Dishes List with Real Product Images ── */}
+                                    <div className="space-y-3 divide-y divide-white/5">
+                                        {(order.items || []).map((item, itemIdx) => {
+                                            const dishImg = getDishImage(item);
+                                            const dishName = item.productId?.name || item.name || "Delicious Dish";
+                                            const dishPortion = typeof item.portion === 'string' ? item.portion : 'Standard Portion';
+                                            const qty = item.qnty || item.quantity || 1;
+                                            const price = Number(item.price) || 0;
 
-                                {/* Card Middle Row: Items List */}
-                                <div className="space-y-4">
-                                    {order.items.map((item, itemIdx) => {
-                                        const itemName = item.productId?.name || item.name;
-                                        const itemImage = item.productId?.image || item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=80";
-                                        const itemCategory = item.portion || item.category || "SINGLE SERVING";
-                                        const itemQty = item.qnty || item.qty || 1;
-                                        const itemPrice = item.price;
+                                            return (
+                                                <div key={itemIdx} className="flex items-center justify-between gap-3 pt-3 first:pt-0">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <img
+                                                            src={dishImg}
+                                                            alt={dishName}
+                                                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border border-white/10 shrink-0 bg-neutral-900 shadow-sm"
+                                                            onError={(e) => {
+                                                                e.target.src = DISH_FALLBACK_IMAGES.default;
+                                                            }}
+                                                        />
+                                                        <div className="min-w-0">
+                                                            <h4 className="text-xs sm:text-sm font-black text-white truncate">
+                                                                {dishName}
+                                                            </h4>
+                                                            <p className="text-[11px] text-gray-400 mt-0.5">
+                                                                {dishPortion}
+                                                            </p>
+                                                            <p className="text-[10px] text-amber-400 font-bold mt-0.5">
+                                                                ₹{price} × {qty}
+                                                            </p>
+                                                        </div>
+                                                    </div>
 
-                                        return (
-                                            <div key={itemIdx} className="flex justify-between items-center gap-4 py-1">
-                                                <div className="flex items-center gap-4">
-                                                    <img
-                                                        src={itemImage}
-                                                        alt={itemName}
-                                                        className="w-14 h-14 rounded-xl object-cover border border-white/10"
-                                                    />
-                                                    <div className="space-y-0.5">
-                                                        <h4 className="text-sm font-black text-white tracking-tight">{itemName}</h4>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                                                            {itemCategory} <span className="text-gray-600 px-1">|</span> Qty: {itemQty}
-                                                        </p>
+                                                    <div className="text-right shrink-0">
+                                                        <span className="text-sm sm:text-base font-black text-white">
+                                                            ₹{price * qty}
+                                                        </span>
                                                     </div>
                                                 </div>
-                                                <span className="text-sm font-black text-white">₹{itemPrice * itemQty}</span>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* ── 3. Delivery Details (What user filled during checkout) ── */}
+                                    <div className="bg-[#18181b] border border-white/5 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                                        {/* Recipient info */}
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                                <FaUser className="text-[9px] text-amber-500" />
+                                                <span>Recipient & Contact</span>
+                                            </span>
+                                            <p className="font-bold text-white text-sm">{recipientName}</p>
+                                            {recipientPhone && (
+                                                <p className="text-gray-300 font-medium flex items-center gap-1 mt-0.5">
+                                                    <FaPhoneAlt className="text-[9px] text-emerald-400" />
+                                                    <span>+91 {recipientPhone}</span>
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Delivery address */}
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                                <FaMapMarkerAlt className="text-[9px] text-amber-500" />
+                                                <span>Delivery Address</span>
+                                            </span>
+                                            <p className="text-gray-300 font-medium leading-relaxed">
+                                                {fullAddress || "Direct counter pickup / Village delivery"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* ── 4. Card Bottom: Payment Mode, Total & Cancel Order Option ── */}
+                                    <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-white/8">
+                                        <div>
+                                            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">
+                                                Payment Method
+                                            </span>
+                                            <span className="text-xs font-semibold text-emerald-400">
+                                                {paymentMethod}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                                            <div className="text-left sm:text-right">
+                                                <span className="text-[10px] text-gray-400 uppercase font-bold block">
+                                                    Grand Total
+                                                </span>
+                                                <span className="text-lg sm:text-xl font-black text-amber-400">
+                                                    ₹{totalAmount}
+                                                </span>
                                             </div>
-                                        );
-                                    })}
+
+                                            {/* CANCEL ORDER BUTTON (Allowed while status is Pending) */}
+                                            {canCancel ? (
+                                                <button
+                                                    onClick={() => setCancelModalOrder(order)}
+                                                    className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 hover:border-rose-500 text-rose-400 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                                                >
+                                                    <FaBan className="text-xs" />
+                                                    <span>Cancel Order</span>
+                                                </button>
+                                            ) : status.toLowerCase() === 'cancelled' ? (
+                                                <span className="text-xs text-rose-400 font-semibold italic">
+                                                    Order was cancelled
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-gray-400 font-medium">
+                                                    Kitchen preparing hot • Cannot cancel
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-
-                                {/* Card Bottom Row: Location and Action Link */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-white/5 text-xs">
-                                    <p className="text-gray-400 flex items-start gap-1.5 leading-relaxed font-medium">
-                                        <FaMapMarkerAlt className="text-amber-500 shrink-0 mt-0.5" />
-                                        <span>{addressString}</span>
-                                    </p>
-
-                                    <button className="text-amber-500 hover:text-amber-400 font-bold uppercase text-[10px] tracking-wider transition-colors shrink-0 flex items-center gap-1 cursor-pointer bg-transparent border-none">
-                                        Track Order Details →
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {filteredOrders.length === 0 && (
-                        <div className="text-center py-12 bg-[#121214]/30 border border-dashed border-white/10 rounded-2xl space-y-2">
-                            <p className="text-sm text-gray-400 font-medium">No orders found in this category.</p>
-                        </div>
-                    )}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
+
+            {/* ── CANCEL ORDER CONFIRMATION MODAL ── */}
+            {cancelModalOrder && (
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-[#121215] border border-white/10 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl animate-scaleUp">
+                        <div className="w-14 h-14 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 mx-auto">
+                            <FaExclamationTriangle className="text-2xl" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-black text-white">Cancel This Order?</h3>
+                            <p className="text-xs text-gray-400 leading-relaxed">
+                                Are you sure you want to cancel order <strong>#{cancelModalOrder._id?.slice(-8).toUpperCase()}</strong>? The kitchen will stop preparation immediately.
+                            </p>
+                        </div>
+
+                        <div className="flex gap-2.5 pt-2">
+                            <button
+                                onClick={() => setCancelModalOrder(null)}
+                                className="flex-1 py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                            >
+                                Keep Order
+                            </button>
+                            <button
+                                onClick={handleConfirmCancel}
+                                disabled={cancellingId !== null}
+                                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-rose-600/25 transition-all cursor-pointer disabled:opacity-50"
+                            >
+                                {cancellingId ? "Cancelling..." : "Yes, Cancel Order"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
