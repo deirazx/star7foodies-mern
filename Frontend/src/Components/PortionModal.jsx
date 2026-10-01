@@ -1,15 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, Check, ShoppingBag, Utensils } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { X, Plus, Minus, Check, ShoppingBag, Utensils, Info } from 'lucide-react';
 
 const PortionModal = ({ isOpen, dish, onClose, onAddToCart }) => {
     const [selectedPortion, setSelectedPortion] = useState('full'); // 'half' | 'full'
     const [quantity, setQuantity] = useState(1);
 
+    const cartItems = useSelector((state) => state?.cart?.items || []);
+    const dishId = dish ? (dish._id || dish.id) : null;
+    const itemsInCart = cartItems.filter(it => (it._id || it.id) === dishId);
+
     // Sync portion selection when dish changes
     useEffect(() => {
         if (dish && dish.portion) {
             if (dish.portion.full && dish.portion.half) {
-                setSelectedPortion('full');
+                // If user already has full in cart, default to half so they can easily add both portions!
+                const alreadyHasFull = itemsInCart.some(it => /full/i.test(it.portion || it.selectedPortion));
+                const alreadyHasHalf = itemsInCart.some(it => /half/i.test(it.portion || it.selectedPortion));
+                if (alreadyHasFull && !alreadyHasHalf) {
+                    setSelectedPortion('half');
+                } else {
+                    setSelectedPortion('full');
+                }
             } else if (dish.portion.full) {
                 setSelectedPortion('full');
             } else if (dish.portion.half) {
@@ -36,6 +48,8 @@ const PortionModal = ({ isOpen, dish, onClose, onAddToCart }) => {
     const handleConfirmAdd = () => {
         onAddToCart({
             ...dish,
+            _id: dish._id || dish.id,
+            id: dish._id || dish.id,
             price: currentPrice,
             portion: currentPortionName,
             selectedPortion: currentPortionName,
@@ -88,6 +102,21 @@ const PortionModal = ({ isOpen, dish, onClose, onAddToCart }) => {
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+
+                {/* Existing cart notification for dual-portion support */}
+                {itemsInCart.length > 0 && (
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs animate-fadeIn">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <ShoppingBag className="w-4 h-4 text-amber-400 shrink-0" />
+                            <span className="text-gray-300 truncate">
+                                Already in cart: <strong className="text-amber-300">{itemsInCart.map(it => `${it.quantity} × ${it.portion}`).join(', ')}</strong>
+                            </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full shrink-0">
+                            Dual-Portion Active
+                        </span>
+                    </div>
+                )}
 
                 {/* Portion Selector Options */}
                 <div className="space-y-3">

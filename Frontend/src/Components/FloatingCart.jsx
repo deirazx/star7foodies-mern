@@ -94,12 +94,16 @@ const FloatingCart = () => {
                         <div className="overflow-y-auto space-y-3 pr-1 divide-y divide-white/5 flex-1">
                             {cartItems.map((item, idx) => {
                                 const itemId = item._id || item.id;
+                                const cartKey = item.cartItemId || `${itemId}-${item.portion || item.selectedPortion || 'std'}`;
                                 const img = item.image_url || item.imageUrl || item.image;
                                 const qty = item.quantity || 1;
                                 const linePrice = item.price * qty;
+                                const portionName = typeof item.portion === 'string' ? item.portion : 'Standard';
+                                const isHalf = /half/i.test(portionName);
+                                const isFull = /full/i.test(portionName);
 
                                 return (
-                                    <div key={itemId || idx} className="flex items-center justify-between gap-3 pt-3 first:pt-0">
+                                    <div key={cartKey} className="flex items-center justify-between gap-3 pt-3 first:pt-0">
                                         {/* Image & Title */}
                                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                             {img ? (
@@ -117,9 +121,20 @@ const FloatingCart = () => {
                                                 <h4 className="text-xs font-bold text-white truncate leading-snug">
                                                     {item.name}
                                                 </h4>
-                                                <p className="text-[10px] text-gray-400">
-                                                    ₹{item.price} each • {typeof item.portion === 'string' ? item.portion : 'Standard'}
-                                                </p>
+                                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                                    <span className="text-[10px] text-gray-400">₹{item.price} •</span>
+                                                    {isHalf ? (
+                                                        <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded">
+                                                            Half Plate • आधा
+                                                        </span>
+                                                    ) : isFull ? (
+                                                        <span className="text-[9px] font-black bg-orange-500/20 text-orange-300 border border-orange-500/30 px-1.5 py-0.2 rounded">
+                                                            Full Plate • पूरा
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] text-gray-400">{portionName}</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -132,9 +147,9 @@ const FloatingCart = () => {
                                             {/* Blinkit Style Stepper */}
                                             <div className="flex items-center bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black rounded-xl overflow-hidden shadow-sm">
                                                 <button
-                                                    onClick={() => dispatch(removeFromCart(itemId))}
+                                                    onClick={() => dispatch(removeFromCart(cartKey))}
                                                     className="px-2.5 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
-                                                    title="Decrease"
+                                                    title={`Decrease ${portionName} quantity`}
                                                 >
                                                     <FaMinus className="text-[9px]" />
                                                 </button>
@@ -142,9 +157,9 @@ const FloatingCart = () => {
                                                     {qty}
                                                 </span>
                                                 <button
-                                                    onClick={() => dispatch(addToCart(item))}
+                                                    onClick={() => dispatch(addToCart({ ...item, quantity: 1 }))}
                                                     className="px-2.5 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
-                                                    title="Increase"
+                                                    title={`Increase ${portionName} quantity`}
                                                 >
                                                     <FaPlus className="text-[9px]" />
                                                 </button>

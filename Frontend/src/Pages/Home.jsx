@@ -429,6 +429,9 @@ const Home = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                         {filteredFoods.map((food) => {
                             const foodId = food._id || food.id;
+                            const itemsInCartForDish = cartItems.filter((item) => (item._id || item.id) === foodId);
+                            const totalQtyForDish = itemsInCartForDish.reduce((sum, it) => sum + (it.quantity || 1), 0);
+                            const hasPortions = food.portion && typeof food.portion === 'object' && (Number(food.portion.half) > 0 || Number(food.portion.full) > 0);
                             const existingCartItem = cartItems.find((item) => item._id === foodId || item.id === foodId);
                             const qty = existingCartItem ? existingCartItem.quantity : 0;
                             const rating = food.rating || (4.0 + (food.name.length % 10) / 10).toFixed(1);
@@ -514,41 +517,73 @@ const Home = () => {
                                                 ₹{food.price}
                                             </span>
 
-                                            {/* Interactive Swiggy Style ADD button */}
-                                            {qty === 0 ? (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleAddToCart(food);
-                                                    }}
-                                                    className="px-4 py-1.5 border border-amber-500/40 hover:border-amber-500 text-amber-500 font-black text-xs bg-amber-500/5 hover:bg-amber-500 hover:text-white rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                                                >
-                                                    ADD
-                                                </button>
-                                            ) : (
-                                                <div className="flex items-center bg-amber-500 text-white rounded-lg overflow-hidden shadow-md">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleRemoveFromCart(foodId);
-                                                        }}
-                                                        className="px-2.5 py-1.5 hover:bg-amber-600 transition-all font-bold text-xs cursor-pointer"
-                                                    >
-                                                        -
-                                                    </button>
-                                                    <span className="px-2 font-bold text-xs min-w-[16px] text-center">
-                                                        {qty}
-                                                    </span>
+                                            {/* Interactive Swiggy Style ADD button with Portion Support */}
+                                            {hasPortions ? (
+                                                totalQtyForDish === 0 ? (
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleAddToCart(food);
                                                         }}
-                                                        className="px-2.5 py-1.5 hover:bg-amber-600 transition-all font-bold text-xs cursor-pointer"
+                                                        className="px-3.5 py-1.5 border border-amber-500/40 hover:border-amber-500 text-amber-500 font-black text-xs bg-amber-500/5 hover:bg-amber-500 hover:text-white rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
                                                     >
-                                                        +
+                                                        <span>ADD</span>
+                                                        <span className="text-[9px] font-normal opacity-80">(Portion)</span>
                                                     </button>
-                                                </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPortionModalDish(food);
+                                                            }}
+                                                            className="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                                                            title="Click to add another half or full plate"
+                                                        >
+                                                            <span>{totalQtyForDish} in cart</span>
+                                                            <span className="text-[10px] font-black bg-black/20 text-black px-1 rounded">+</span>
+                                                        </button>
+                                                        <span className="text-[9px] text-amber-400 font-semibold truncate max-w-[110px]">
+                                                            {itemsInCartForDish.map(it => `${it.portion}: ${it.quantity}`).join(', ')}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            ) : (
+                                                qty === 0 ? (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleAddToCart(food);
+                                                        }}
+                                                        className="px-4 py-1.5 border border-amber-500/40 hover:border-amber-500 text-amber-500 font-black text-xs bg-amber-500/5 hover:bg-amber-500 hover:text-white rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                                                    >
+                                                        ADD
+                                                    </button>
+                                                ) : (
+                                                    <div className="flex items-center bg-amber-500 text-white rounded-lg overflow-hidden shadow-md">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRemoveFromCart(foodId);
+                                                            }}
+                                                            className="px-2.5 py-1.5 hover:bg-amber-600 transition-all font-bold text-xs cursor-pointer"
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span className="px-2 font-bold text-xs min-w-[16px] text-center">
+                                                            {qty}
+                                                        </span>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleAddToCart(food);
+                                                            }}
+                                                            className="px-2.5 py-1.5 hover:bg-amber-600 transition-all font-bold text-xs cursor-pointer"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                )
                                             )}
                                         </div>
                                     </div>

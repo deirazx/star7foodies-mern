@@ -152,6 +152,7 @@ const ItemDetails = () => {
 
         dispatch(addToCart({
             _id: dish._id || dish.id,
+            id: dish._id || dish.id,
             name: dish.name,
             price: currentPrice,
             portion: currentPortionName,
@@ -249,6 +250,8 @@ const ItemDetails = () => {
     const imageUrl = dish.image_url || dish.imageUrl || dish.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop";
     const isVeg = dish.isVeg !== undefined ? dish.isVeg : true;
     const isAvailable = dish.is_available !== undefined ? dish.is_available : (dish.isAvailable ?? true);
+    const dishId = dish?._id || dish?.id;
+    const itemsInCartForThisDish = cartItems.filter(it => (it._id || it.id) === dishId);
 
     return (
         <div className="min-h-screen bg-[#0a0a0b] text-white py-6 sm:py-8 pb-28 md:pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -324,11 +327,10 @@ const ItemDetails = () => {
                                 </div>
 
                                 {/* Availability Badge */}
-                                <div className={`px-2.5 py-1 rounded-xl border backdrop-blur-md text-[10px] font-bold uppercase tracking-wider shadow-lg flex items-center gap-1.5 ${
-                                    isAvailable
+                                <div className={`px-2.5 py-1 rounded-xl border backdrop-blur-md text-[10px] font-bold uppercase tracking-wider shadow-lg flex items-center gap-1.5 ${isAvailable
                                         ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                                         : 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-                                }`}>
+                                    }`}>
                                     <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
                                     <span>{isAvailable ? 'In Stock (Live)' : 'Out of Stock'}</span>
                                 </div>
@@ -409,9 +411,9 @@ const ItemDetails = () => {
                                     <span className="text-3xl sm:text-4xl font-black text-amber-400">
                                         ₹{currentPrice}
                                     </span>
-                                    <span className="text-xs text-gray-400 font-medium">
+                                    {/* <span className="text-xs text-gray-400 font-medium">
                                         (Taxes & GST Included)
-                                    </span>
+                                    </span> */}
                                 </div>
                             </div>
 
@@ -448,19 +450,17 @@ const ItemDetails = () => {
                                         <button
                                             type="button"
                                             onClick={() => setSelectedPortion('half')}
-                                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                                                selectedPortion === 'half'
+                                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${selectedPortion === 'half'
                                                     ? 'bg-amber-500/15 border-amber-500 shadow-md shadow-amber-500/10'
                                                     : 'bg-[#18181c] border-white/10 hover:border-white/20'
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-center justify-between mb-1.5">
                                                 <span className="text-xs font-bold text-white">Half Portion</span>
-                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                                    selectedPortion === 'half'
+                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedPortion === 'half'
                                                         ? 'border-amber-400 bg-amber-500 text-black'
                                                         : 'border-gray-500 bg-transparent'
-                                                }`}>
+                                                    }`}>
                                                     {selectedPortion === 'half' && <Check className="w-3 h-3 stroke-[3]" />}
                                                 </div>
                                             </div>
@@ -474,22 +474,20 @@ const ItemDetails = () => {
                                         <button
                                             type="button"
                                             onClick={() => setSelectedPortion('full')}
-                                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                                                selectedPortion === 'full'
+                                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${selectedPortion === 'full'
                                                     ? 'bg-amber-500/15 border-amber-500 shadow-md shadow-amber-500/10'
                                                     : 'bg-[#18181c] border-white/10 hover:border-white/20'
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-center justify-between mb-1.5">
                                                 <span className="text-xs font-bold text-white flex items-center gap-1.5">
                                                     <span>Full Portion</span>
                                                     <span className="text-[9px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.2 rounded">Recommended</span>
                                                 </span>
-                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                                    selectedPortion === 'full'
+                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedPortion === 'full'
                                                         ? 'border-amber-400 bg-amber-500 text-black'
                                                         : 'border-gray-500 bg-transparent'
-                                                }`}>
+                                                    }`}>
                                                     {selectedPortion === 'full' && <Check className="w-3 h-3 stroke-[3]" />}
                                                 </div>
                                             </div>
@@ -536,6 +534,30 @@ const ItemDetails = () => {
                                 </div>
                             </div>
 
+                            {/* Existing Cart Notice: Dual Portion Support */}
+                            {itemsInCartForThisDish.length > 0 && (
+                                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-3 animate-fadeIn">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <ShoppingBag className="w-4 h-4 text-amber-400 shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-white font-semibold truncate">
+                                                Already in Cart: <span className="text-amber-300 font-bold">{itemsInCartForThisDish.map(it => `${it.quantity} × ${it.portion}`).join(', ')}</span>
+                                            </p>
+                                            <p className="text-[10px] text-gray-400">
+                                                Adding another portion will sit alongside it in your cart
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Link
+                                        to="/cart"
+                                        className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs rounded-xl transition-all shrink-0 flex items-center gap-1"
+                                    >
+                                        <span>View Cart</span>
+                                        <ChevronRight className="w-3.5 h-3.5" />
+                                    </Link>
+                                </div>
+                            )}
+
                             {/* Action Buttons: Add to Cart & Continue Ordering */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                                 {/* Primary CTA: Add to Cart */}
@@ -543,13 +565,12 @@ const ItemDetails = () => {
                                     type="button"
                                     onClick={handleAddToCart}
                                     disabled={!isAvailable}
-                                    className={`py-3.5 px-6 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl transition-all cursor-pointer ${
-                                        !isAvailable
+                                    className={`py-3.5 px-6 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl transition-all cursor-pointer ${!isAvailable
                                             ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5'
                                             : addedSuccess
                                                 ? 'bg-emerald-500 text-black shadow-emerald-500/20 scale-[1.02]'
                                                 : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98]'
-                                    }`}
+                                        }`}
                                 >
                                     {addedSuccess ? (
                                         <>

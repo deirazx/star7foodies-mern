@@ -27,6 +27,23 @@ const createOrder = async (req, res) => {
             });
         }
 
+        // Strict Phone Validation
+        const cleanPhone = String(phone).trim().replace(/^(\+91|91|0)/, '').replace(/[\s-]/g, '');
+        if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+            return res.status(400).json({
+                message: "Please provide a valid 10-digit Indian phone number (starting with 6, 7, 8, or 9)."
+            });
+        }
+
+        // Strict Pincode Validation
+        const SUPPORTED_PINCODES = ["843323", "843314", "843320", "843313", "843328"];
+        const cleanPincode = String(postalCode).trim();
+        if (!SUPPORTED_PINCODES.includes(cleanPincode)) {
+            return res.status(400).json({
+                message: `Delivery is currently only supported in area PIN codes: ${SUPPORTED_PINCODES.join(', ')}`
+            });
+        }
+
         // Validate items array
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({

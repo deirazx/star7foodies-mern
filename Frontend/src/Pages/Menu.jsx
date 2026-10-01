@@ -288,8 +288,8 @@ const Menu = () => {
 
     // Helper to get cart quantity for a specific item
     const getItemQuantity = (id) => {
-        const found = cartItems.find(item => (item._id === id || item.id === id));
-        return found ? found.quantity : 0;
+        const matching = cartItems.filter(item => (item._id === id || item.id === id));
+        return matching.reduce((sum, it) => sum + (it.quantity || 1), 0);
     };
 
     // Toggle Wishlist Heart
@@ -590,7 +590,11 @@ const Menu = () => {
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                                 {filteredFoods.map((item) => {
                                     const itemId = item._id || item.id;
-                                    const qty = getItemQuantity(itemId);
+                                    const rawP = item.rawPortion || item.portion;
+                                    const hasPortions = rawP && typeof rawP === 'object' && (Number(rawP.half) > 0 || Number(rawP.full) > 0);
+                                    const itemsInCartForDish = cartItems.filter(it => (it._id || it.id) === itemId);
+                                    const totalQtyForDish = itemsInCartForDish.reduce((sum, it) => sum + (it.quantity || 1), 0);
+                                    const qty = totalQtyForDish;
                                     const isVeg = item.isVeg !== undefined ? item.isVeg : true;
                                     const imageUrl = item.image_url || item.imageUrl || item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop";
                                     const isFavorited = wishlist[itemId];
@@ -702,43 +706,78 @@ const Menu = () => {
 
                                                 {/* ADD / Quantity Counter Button */}
                                                 <div>
-                                                    {qty === 0 ? (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleAddItem(item);
-                                                            }}
-                                                            className="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/40 hover:border-amber-500 text-amber-400 hover:text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center gap-1 cursor-pointer"
-                                                        >
-                                                            <span>ADD</span>
-                                                            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                                                        </button>
-                                                    ) : (
-                                                        <div className="flex items-center bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black rounded-xl overflow-hidden shadow-md shadow-amber-500/20">
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    dispatch(removeFromCart(itemId));
-                                                                }}
-                                                                className="px-2 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
-                                                                title="Decrease"
-                                                            >
-                                                                <Minus className="w-3.5 h-3.5 stroke-[3]" />
-                                                            </button>
-                                                            <span className="px-2 text-xs select-none">
-                                                                {qty}
-                                                            </span>
+                                                    {hasPortions ? (
+                                                        totalQtyForDish === 0 ? (
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleAddItem(item);
                                                                 }}
-                                                                className="px-2 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
-                                                                title="Increase"
+                                                                className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/40 hover:border-amber-500 text-amber-400 hover:text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center gap-1 cursor-pointer"
                                                             >
+                                                                <span>ADD</span>
                                                                 <Plus className="w-3.5 h-3.5 stroke-[3]" />
                                                             </button>
-                                                        </div>
+                                                        ) : (
+                                                            <div className="flex flex-col items-end gap-1">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setPortionModalDish({
+                                                                            ...item,
+                                                                            portion: rawP
+                                                                        });
+                                                                    }}
+                                                                    className="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+                                                                    title="Click to add another half or full plate portion"
+                                                                >
+                                                                    <span>{totalQtyForDish} in cart</span>
+                                                                    <span className="text-[10px] font-black bg-black/20 text-black px-1.5 py-0.5 rounded-md">+ Add</span>
+                                                                </button>
+                                                                <span className="text-[9px] text-amber-400 font-semibold truncate max-w-[120px]">
+                                                                    {itemsInCartForDish.map(it => `${it.portion}: ${it.quantity}`).join(', ')}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    ) : (
+                                                        qty === 0 ? (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAddItem(item);
+                                                                }}
+                                                                className="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/40 hover:border-amber-500 text-amber-400 hover:text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center gap-1 cursor-pointer"
+                                                            >
+                                                                <span>ADD</span>
+                                                                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                                            </button>
+                                                        ) : (
+                                                            <div className="flex items-center bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black rounded-xl overflow-hidden shadow-md shadow-amber-500/20">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        dispatch(removeFromCart(itemId));
+                                                                    }}
+                                                                    className="px-2 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
+                                                                    title="Decrease"
+                                                                >
+                                                                    <Minus className="w-3.5 h-3.5 stroke-[3]" />
+                                                                </button>
+                                                                <span className="px-2 text-xs select-none">
+                                                                    {qty}
+                                                                </span>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleAddItem(item);
+                                                                    }}
+                                                                    className="px-2 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
+                                                                    title="Increase"
+                                                                >
+                                                                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                                                </button>
+                                                            </div>
+                                                        )
                                                     )}
                                                 </div>
                                             </div>

@@ -28,10 +28,7 @@ import {
     Utensils
 } from 'lucide-react';
 
-const PROMO_CODES = [
-    { code: 'STAR7WELCOME', label: '50% OFF up to ₹100 on 1st order', discount: 0.5 },
-    { code: 'FREEDEL', label: 'Free Delivery on this order', discount: 0 },
-];
+const SUPPORTED_PINCODES = ["843323", "843314", "843320", "843313", "843328"];
 
 const Checkout = () => {
     const dispatch = useDispatch();
@@ -49,11 +46,7 @@ const Checkout = () => {
     const [orderError, setOrderError] = useState(null);
     const [placedOrder, setPlacedOrder] = useState(null);
     const [copiedOrderId, setCopiedOrderId] = useState(false);
-
-    // Promo Code State
-    const [promoInput, setPromoInput] = useState('');
-    const [appliedPromo, setAppliedPromo] = useState(null);
-    const [promoError, setPromoError] = useState('');
+    const [showOnlinePaymentModal, setShowOnlinePaymentModal] = useState(false);
 
     // Delivery Form State
     const [formData, setFormData] = useState({
@@ -63,9 +56,9 @@ const Checkout = () => {
         street: '',
         city: 'Muzaffarpur',
         state: 'Bihar',
-        postalCode: '',
+        postalCode: '843323',
         deliveryNotes: '',
-        paymentMethod: 'COD' // 'COD' | 'UPI' | 'CARD'
+        paymentMethod: 'COD' // 'COD' | 'UPI'
     });
 
     const [formErrors, setFormErrors] = useState({});
@@ -98,19 +91,29 @@ const Checkout = () => {
         }
     }, [user, dispatch]);
 
-    // Financial Calculations
+    // Financial Calculations (Exact requested formula)
     const totalItemsCount = useMemo(() => {
         return cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
     }, [cartItems]);
 
-    const DELIVERY_FEE = totalCartAmount >= 199 ? 0 : 39;
-    const PLATFORM_FEE = 3;
-    const promoDiscount = appliedPromo
-        ? appliedPromo.discount > 0
-            ? Math.min(Math.round(totalCartAmount * appliedPromo.discount), 100)
-            : DELIVERY_FEE
-        : 0;
-    const grandTotal = Math.max(0, totalCartAmount + DELIVERY_FEE + PLATFORM_FEE - promoDiscount);
+    const subtotal = useMemo(() => {
+        return cartItems.reduce((acc, item) => acc + ((item.quantity || item.qnty || 1) * Number(item.price)), 0);
+    }, [cartItems]);
+
+    const cleanPincode = (formData.postalCode || '').trim();
+    const isPincodeSupported = SUPPORTED_PINCODES.includes(cleanPincode);
+
+    // Delivery Fee Formula:
+    // deliveryFee = delivery.pincode === "843323" ? (subtotal > 299 ? 0 : 25.00) : (subtotal > 500 ? 0 : 50.00)
+    const deliveryFee = useMemo(() => {
+        if (cleanPincode === "843323") {
+            return subtotal > 299 ? 0 : 25.00;
+        } else {
+            return subtotal > 500 ? 0 : 50.00;
+        }
+    }, [cleanPincode, subtotal]);
+
+    const grandTotal = subtotal + (cleanPincode && isPincodeSupported ? deliveryFee : (cleanPincode === "843323" ? 25 : 50));
 
     // Form Change Handler
     const handleInputChange = (e) => {
@@ -121,39 +124,49 @@ const Checkout = () => {
         }
     };
 
-    // Promo Code Handlers
-    const handleApplyPromo = () => {
-        const found = PROMO_CODES.find((p) => p.code === promoInput.trim().toUpperCase());
-        if (found) {
-            setAppliedPromo(found);
-            setPromoError('');
-        } else {
-            setAppliedPromo(null);
-            setPromoError('Invalid promo code. Try STAR7WELCOME or FREEDEL.');
-        }
-    };
-
-    const handleRemovePromo = () => {
-        setAppliedPromo(null);
-        setPromoInput('');
-        setPromoError('');
-    };
-
-    // Client-side Validation
+    // Client-side Strict Validation (Mobile Regex, Address, Pincode)
     const validateForm = () => {
         const errors = {};
-        if (!formData.fullName.trim()) errors.fullName = 'Full name is required';
-        if (!formData.phone.trim()) {
-            errors.phone = 'Mobile number is required';
-        } else if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) {
-            errors.phone = 'Please enter a valid 10-digit Indian mobile number';
+
+        // Name Validation
+        if (!formData.fullName.trim()) {
+            errors.fullName = 'Full name is required';
+        } else if (formData.fullName.trim().length < 3) {
+            errors.fullName = 'Please enter your complete name (min 3 characters)';
         }
-        if (!formData.street.trim()) errors.street = 'Street address / Flat / Landmark is required';
-        if (!formData.city.trim()) errors.city = 'City is required';
-        if (!formData.postalCode.trim()) {
+
+        // Strict Mobile Number Regex
+        const cleanPhone = formData.phone.trim().replace(/^(\+91|91|0)/, '').replace(/[\s-]/g, '');
+        if (!cleanPhone) {
+            errors.phone = 'Mobile number is required';
+        } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+            errors.phone = 'Please enter a valid 10-digit Indian mobile number (must start with 6, 7, 8, or 9)';
+        } else if (/^(\d)\1{9}$/.test(cleanPhone) || cleanPhone === '1234567890') {
+            errors.phone = 'Invalid phone number format (fake or repeated digits)';
+        }
+
+        // Strict Street Address Validation
+        const cleanStreet = formData.street.trim();
+        if (!cleanStreet) {
+            errors.street = 'Street / House / Landmark address is required';
+        } else if (cleanStreet.length < 8) {
+            errors.street = 'Please provide detailed delivery address (House/Shop No., Landmark, Road - min 8 chars)';
+        } else if (/^(.)\1{7,}$/.test(cleanStreet)) {
+            errors.street = 'Please enter a real, valid delivery address';
+        }
+
+        // City
+        if (!formData.city.trim()) {
+            errors.city = 'City / Town name is required';
+        }
+
+        // Strict Pincode Validation (Supported Area Pincodes Only)
+        if (!cleanPincode) {
             errors.postalCode = 'PIN code is required';
-        } else if (!/^\d{6}$/.test(formData.postalCode.trim())) {
-            errors.postalCode = 'PIN code must be exactly 6 digits';
+        } else if (!/^\d{6}$/.test(cleanPincode)) {
+            errors.postalCode = 'PIN code must be a 6-digit number';
+        } else if (!isPincodeSupported) {
+            errors.postalCode = `Sorry, delivery is only supported in: ${SUPPORTED_PINCODES.join(', ')}`;
         }
 
         setFormErrors(errors);
@@ -634,20 +647,66 @@ const Checkout = () => {
                                     />
                                 </div>
 
-                                {/* PIN Code */}
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                        PIN Code (6 digits) *
-                                    </label>
+                                {/* PIN Code with Supported Chips */}
+                                <div className="sm:col-span-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="block text-xs font-semibold text-gray-300">
+                                            Area PIN Code (Serviceable Pincodes Only) *
+                                        </label>
+                                        <span className="text-[10px] text-amber-400 font-semibold">
+                                            Choose or type your 6-digit PIN
+                                        </span>
+                                    </div>
+
+                                    {/* Quick Pincode Selector Chips */}
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {SUPPORTED_PINCODES.map((pin) => (
+                                            <button
+                                                key={pin}
+                                                type="button"
+                                                onClick={() => {
+                                                    setFormData(prev => ({ ...prev, postalCode: pin }));
+                                                    if (formErrors.postalCode) setFormErrors(prev => ({ ...prev, postalCode: null }));
+                                                }}
+                                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                    cleanPincode === pin
+                                                        ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
+                                                        : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
+                                                }`}
+                                            >
+                                                {pin} {pin === '843323' ? '★ Hub' : ''}
+                                            </button>
+                                        ))}
+                                    </div>
+
                                     <input
                                         type="text"
                                         name="postalCode"
                                         maxLength={6}
                                         value={formData.postalCode}
                                         onChange={handleInputChange}
-                                        placeholder="842001"
-                                        className={`w-full bg-[#18181b] border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 ${formErrors.postalCode ? 'border-rose-500' : 'border-white/10'}`}
+                                        placeholder="e.g. 843323"
+                                        className={`w-full bg-[#18181b] border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 font-mono tracking-wider ${formErrors.postalCode ? 'border-rose-500' : 'border-white/10'}`}
                                     />
+
+                                    {/* Dynamic Pincode Notice & Delivery Rule Helper */}
+                                    {cleanPincode && isPincodeSupported ? (
+                                        <div className="text-[11px] p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 flex items-center justify-between">
+                                            <span>
+                                                {cleanPincode === '843323'
+                                                    ? '🟢 Local Hub 843323: ₹25 Delivery (Free above ₹299)'
+                                                    : `🟢 Supported Area ${cleanPincode}: ₹50 Delivery (Free above ₹500)`}
+                                            </span>
+                                            <span className="font-bold">
+                                                {deliveryFee === 0 ? '🎉 Free Delivery!' : `Fee: ₹${deliveryFee}`}
+                                            </span>
+                                        </div>
+                                    ) : cleanPincode.length === 6 ? (
+                                        <p className="text-[11px] text-rose-400 font-semibold p-2 bg-rose-500/10 border border-rose-500/20 rounded-xl">
+                                            ❌ Delivery is not available for PIN {cleanPincode}. We deliver only to: {SUPPORTED_PINCODES.join(', ')}.
+                                        </p>
+                                    ) : null}
+
                                     {formErrors.postalCode && (
                                         <p className="text-[10px] text-rose-400 mt-1">{formErrors.postalCode}</p>
                                     )}
@@ -664,7 +723,7 @@ const Checkout = () => {
                                     name="deliveryNotes"
                                     value={formData.deliveryNotes}
                                     onChange={handleInputChange}
-                                    placeholder="e.g. Leave with security guard, don't ring bell"
+                                    placeholder="e.g. Near Shiv Mandir, call on arrival, don't ring bell"
                                     className="w-full bg-[#18181b] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
                                 />
                             </div>
@@ -683,19 +742,21 @@ const Checkout = () => {
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                {/* Cash on Delivery */}
+                                {/* Cash on Delivery (Primary Active) */}
                                 <label
-                                    className={`p-4 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${formData.paymentMethod === 'COD'
-                                        ? 'bg-amber-500/10 border-amber-500/40 text-white shadow-md'
-                                        : 'bg-[#18181b] border-white/5 text-gray-300 hover:border-white/10'
-                                        }`}
+                                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'COD' }))}
+                                    className={`p-4 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${
+                                        formData.paymentMethod === 'COD'
+                                            ? 'bg-amber-500/10 border-amber-500/40 text-white shadow-md'
+                                            : 'bg-[#18181b] border-white/5 text-gray-300 hover:border-white/10'
+                                    }`}
                                 >
                                     <input
                                         type="radio"
                                         name="paymentMethod"
                                         value="COD"
                                         checked={formData.paymentMethod === 'COD'}
-                                        onChange={handleInputChange}
+                                        onChange={() => {}}
                                         className="mt-0.5 accent-amber-500 cursor-pointer"
                                     />
                                     <div>
@@ -704,50 +765,58 @@ const Checkout = () => {
                                             Cash on Delivery (COD)
                                         </span>
                                         <p className="text-[11px] text-gray-400 mt-1">
-                                            Pay with cash or UPI directly when food arrives at your door.
+                                            Pay cash or scan delivery boy's UPI QR code directly on arrival.
                                         </p>
                                     </div>
                                 </label>
 
-                                {/* Online / UPI Payment */}
-                                <label
-                                    className={`p-4 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${formData.paymentMethod === 'UPI'
-                                        ? 'bg-amber-500/10 border-amber-500/40 text-white shadow-md'
-                                        : 'bg-[#18181b] border-white/5 text-gray-300 hover:border-white/10'
-                                        }`}
+                                {/* Online / UPI Payment (Triggers professional maintenance alert) */}
+                                <div
+                                    onClick={() => {
+                                        setShowOnlinePaymentModal(true);
+                                        setFormData(prev => ({ ...prev, paymentMethod: 'COD' }));
+                                    }}
+                                    className="p-4 rounded-xl border border-white/5 hover:border-amber-500/30 bg-[#18181b] text-gray-300 hover:text-white cursor-pointer transition-all flex items-start gap-3"
                                 >
                                     <input
                                         type="radio"
                                         name="paymentMethod"
                                         value="UPI"
-                                        checked={formData.paymentMethod === 'UPI'}
-                                        onChange={handleInputChange}
+                                        checked={false}
+                                        onChange={() => {}}
                                         className="mt-0.5 accent-amber-500 cursor-pointer"
                                     />
                                     <div>
                                         <span className="font-bold text-xs flex items-center gap-1.5 text-white">
                                             <CreditCard className="w-3.5 h-3.5 text-sky-400" />
-                                            Online UPI / Card
+                                            Online UPI / Card Payment
+                                            <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold">Info</span>
                                         </span>
                                         <p className="text-[11px] text-gray-400 mt-1">
                                             Google Pay, PhonePe, Paytm, or Credit/Debit Cards.
                                         </p>
                                     </div>
-                                </label>
+                                </div>
                             </div>
                         </div>
 
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-black font-extrabold text-sm rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                            disabled={isSubmitting || !isPincodeSupported}
+                            className={`w-full py-4 text-black font-extrabold text-sm rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2.5 cursor-pointer ${
+                                !isPincodeSupported
+                                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5'
+                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-amber-500/20 hover:scale-[1.01] active:scale-[0.99]'
+                            }`}
                         >
                             {isSubmitting ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                                     <span>Securing & Placing Your Order...</span>
                                 </>
+                            ) : !isPincodeSupported ? (
+                                <span>Pincode Not Supported for Delivery</span>
                             ) : (
                                 <>
                                     <Lock className="w-4 h-4" />
@@ -758,7 +827,7 @@ const Checkout = () => {
                         </button>
 
                         <p className="text-center text-[10px] text-gray-500">
-                            By placing this order, you accept Star7Foodies' standard terms of dining & contactless delivery policy.
+                            By placing this order, you accept Star7Foodies' standard terms of dining & contactless village delivery policy.
                         </p>
                     </form>
 
@@ -776,15 +845,18 @@ const Checkout = () => {
                                 </Link>
                             </div>
 
-                            {/* Itemized Cart List */}
+                            {/* Itemized Cart List with Clear Portion Labels */}
                             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
                                 {cartItems.map((item, idx) => {
                                     const img = item.imageUrl || item.image_url || item.image;
                                     const qty = item.quantity || 1;
                                     const lineTotal = item.price * qty;
+                                    const portionName = item.portion || item.selectedPortion;
+                                    const isHalf = /half/i.test(portionName);
+                                    const isFull = /full/i.test(portionName);
 
                                     return (
-                                        <div key={item._id || idx} className="flex items-center justify-between gap-3 text-xs">
+                                        <div key={item.cartItemId || item._id || idx} className="flex items-center justify-between gap-3 text-xs">
                                             <div className="flex items-center gap-2.5 min-w-0">
                                                 {img ? (
                                                     <img
@@ -799,12 +871,27 @@ const Checkout = () => {
                                                 )}
                                                 <div className="min-w-0">
                                                     <p className="font-semibold text-white truncate">{item.name}</p>
-                                                    <p className="text-[10px] text-gray-400">
-                                                        ₹{item.price} × {qty}
-                                                    </p>
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        {isHalf ? (
+                                                            <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
+                                                                Half Plate
+                                                            </span>
+                                                        ) : isFull ? (
+                                                            <span className="text-[10px] font-black text-orange-400 bg-orange-500/10 px-1.5 py-0.2 rounded border border-orange-500/20">
+                                                                Full Plate
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[10px] text-gray-400">
+                                                                {portionName}
+                                                            </span>
+                                                        )}
+                                                        <span className="text-[10px] text-gray-400">
+                                                            ₹{item.price} × {qty}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <span className="font-bold text-white shrink-0">
+                                            <span className="font-bold text-amber-400 shrink-0">
                                                 ₹{lineTotal}
                                             </span>
                                         </div>
@@ -812,76 +899,39 @@ const Checkout = () => {
                                 })}
                             </div>
 
-                            {/* Promo Code Box */}
-                            <div className="pt-3 border-t border-white/5">
-                                {appliedPromo ? (
-                                    <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs text-emerald-300">
-                                        <div className="flex items-center gap-1.5">
-                                            <Tag className="w-3.5 h-3.5 text-emerald-400" />
-                                            <span className="font-bold">{appliedPromo.code}</span>
-                                            <span>(Saved ₹{promoDiscount})</span>
-                                        </div>
-                                        <button
-                                            onClick={handleRemovePromo}
-                                            className="text-xs text-gray-400 hover:text-white cursor-pointer font-bold ml-2"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-1.5">
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={promoInput}
-                                                onChange={(e) => setPromoInput(e.target.value)}
-                                                placeholder="Enter coupon code"
-                                                className="flex-1 bg-[#18181b] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 uppercase focus:outline-none focus:border-amber-500"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={handleApplyPromo}
-                                                className="px-3.5 py-1.5 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500 text-amber-400 hover:text-black font-bold text-xs rounded-xl transition-all cursor-pointer"
-                                            >
-                                                Apply
-                                            </button>
-                                        </div>
-                                        {promoError && (
-                                            <p className="text-[10px] text-rose-400">{promoError}</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Bill Calculation */}
-                            <div className="pt-3 border-t border-white/5 space-y-2 text-xs text-gray-400">
-                                <div className="flex justify-between">
-                                    <span>Item Total</span>
-                                    <span className="font-medium text-white">₹{totalCartAmount}</span>
+                            {/* Bill Calculation (Exact requested formula) */}
+                            <div className="pt-3 border-t border-white/5 space-y-2.5 text-xs text-gray-400">
+                                <div className="flex justify-between items-center">
+                                    <span>Items Subtotal ({totalItemsCount} items)</span>
+                                    <span className="font-medium text-white">₹{subtotal}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span>Delivery Fee</span>
-                                    {DELIVERY_FEE === 0 ? (
-                                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                                            FREE
-                                        </span>
-                                    ) : (
-                                        <span className="font-medium text-white">₹{DELIVERY_FEE}</span>
-                                    )}
+                                    <span className="flex items-center gap-1">
+                                        <span>Delivery Fee</span>
+                                        {cleanPincode && (
+                                            <span className="text-[10px] font-mono text-gray-500">
+                                                ({cleanPincode})
+                                            </span>
+                                        )}
+                                    </span>
+                                    <span className="font-bold">
+                                        {!cleanPincode ? (
+                                            <span className="text-amber-400 text-[11px]">Enter PIN</span>
+                                        ) : !isPincodeSupported ? (
+                                            <span className="text-rose-400 text-[11px]">Unavailable</span>
+                                        ) : deliveryFee === 0 ? (
+                                            <span className="text-emerald-400 text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                FREE DELIVERY
+                                            </span>
+                                        ) : (
+                                            <span className="text-white">₹{deliveryFee}.00</span>
+                                        )}
+                                    </span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span>Platform Fee</span>
-                                    <span className="font-medium text-white">₹{PLATFORM_FEE}</span>
-                                </div>
-                                {promoDiscount > 0 && (
-                                    <div className="flex justify-between text-emerald-400 font-semibold">
-                                        <span>Coupon Discount</span>
-                                        <span>- ₹{promoDiscount}</span>
-                                    </div>
-                                )}
+
                                 <div className="pt-3 border-t border-white/10 flex justify-between items-center text-sm font-black text-white">
-                                    <span>Total To Pay</span>
-                                    <span className="text-lg font-black text-amber-400">₹{grandTotal}</span>
+                                    <span>Total Payable</span>
+                                    <span className="text-xl font-black text-amber-400">₹{grandTotal}</span>
                                 </div>
                             </div>
                         </div>
@@ -899,6 +949,55 @@ const Checkout = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Online Payment Gateway Maintenance / Notice Modal */}
+            {showOnlinePaymentModal && (
+                <div
+                    className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                    onClick={() => setShowOnlinePaymentModal(false)}
+                >
+                    <div
+                        className="bg-[#141417] border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl relative text-white space-y-5"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 mx-auto">
+                            <CreditCard className="w-7 h-7" />
+                        </div>
+
+                        <div className="text-center space-y-2">
+                            <h3 className="text-lg font-black text-white">
+                                Online Payment Notice
+                            </h3>
+                            <p className="text-xs text-amber-400 font-semibold">
+                                ऑनलाइन भुगतान सुविधा जल्द उपलब्ध होगी
+                            </p>
+                            <p className="text-xs text-gray-300 leading-relaxed pt-1">
+                                We are currently upgrading our secure UPI & Netbanking gateway with banking partners for 100% fraud protection.
+                            </p>
+                            <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-[11px] text-gray-300 text-left space-y-1 mt-2">
+                                <p className="font-bold text-white flex items-center gap-1.5">
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>Cash on Delivery (COD) is 100% Active</span>
+                                </p>
+                                <p className="text-[10px] text-gray-400">
+                                    You can pay with cash or simply scan the delivery partner's UPI QR code (PhonePe, GPay, Paytm) when your piping hot food arrives!
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowOnlinePaymentModal(false);
+                                setFormData(prev => ({ ...prev, paymentMethod: 'COD' }));
+                            }}
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
+                        >
+                            Got It, Continue with Cash on Delivery
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
