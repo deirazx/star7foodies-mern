@@ -216,7 +216,7 @@ function Navbar() {
                                                     className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-gray-300 hover:text-amber-400 hover:bg-white/5 transition-all font-medium"
                                                 >
                                                     <FaHistory className="text-amber-500 text-xs" />
-                                                    <span>My Orders (ऑर्डर ट्रैक करें)</span>
+                                                    <span>My Orders</span>
                                                 </Link>
 
                                                 {user?.role === "admin" && (
@@ -234,7 +234,7 @@ function Navbar() {
                                                     className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-gray-300 hover:text-amber-400 hover:bg-white/5 transition-all font-medium"
                                                 >
                                                     <FaUtensils className="text-amber-500 text-xs" />
-                                                    <span>Explore Menu (मेन्यू देखें)</span>
+                                                    <span>Explore Menu</span>
                                                 </Link>
                                             </div>
 
@@ -244,7 +244,7 @@ function Navbar() {
                                                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 transition-all font-semibold cursor-pointer"
                                                 >
                                                     <FaSignOutAlt className="text-xs" />
-                                                    <span>Log Out (लॉग आउट)</span>
+                                                    <span>Log Out</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -319,7 +319,7 @@ function Navbar() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleSearchSubmit}
-                            placeholder="Search dishes (समोसा, बिरयानी)..."
+                            placeholder="Search dishes (biryani, pizza)..."
                             className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500"
                         />
                         <FaSearch
@@ -353,7 +353,7 @@ function Navbar() {
                             >
                                 <span className="flex items-center gap-2">
                                     <FaHistory className="text-amber-500 text-xs" />
-                                    My Orders (ऑर्डर ट्रैक करें)
+                                    My Orders
                                 </span>
                                 <span className="text-gray-600 text-xs">›</span>
                             </Link>

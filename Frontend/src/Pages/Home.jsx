@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     FaStar,
     FaLeaf,
@@ -6,92 +7,106 @@ import {
     FaArrowRight,
     FaMotorcycle,
     FaShieldAlt,
-    FaTrash,
     FaPercent,
     FaRegDotCircle,
-    FaShoppingBag
+    FaShoppingBag,
+    FaUtensils,
+    FaClock,
+    FaFire
 } from 'react-icons/fa';
 import { allFoods } from '../Api/axios';
 import { useSelector, useDispatch } from 'react-redux';
-import { addToCart, removeFromCart, clearCart } from '../Redux/Slices/cart.js';
+import { addToCart, removeFromCart } from '../Redux/Slices/cart.js';
 
 const FOODS = [
     {
-        id: 1,
+        _id: "mock-1",
+        id: "mock-1",
         name: "Special Chicken Biryani",
         category: "Biryani",
         price: 289,
-        rating: 4.6,
+        rating: 4.8,
         time: "25-30 mins",
         isVeg: false,
         desc: "Fragrant basmati rice layered with juicy marinated chicken, aromatic spices, and caramelized onions.",
         image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60",
+        imageUrl: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60",
         discount: "60% OFF",
         bestseller: true
     },
     {
-        id: 2,
+        _id: "mock-2",
+        id: "mock-2",
         name: "Double Cheese Margherita Pizza",
         category: "Pizza",
         price: 199,
-        rating: 4.4,
+        rating: 4.6,
         time: "15-20 mins",
         isVeg: true,
         desc: "Classic delight with 100% real mozzarella cheese, fresh basil leaves, and tangy tomato sauce.",
         image: "https://images.unsplash.com/photo-1601924582970-9238b4ead50c?w=500&auto=format&fit=crop&q=60",
+        imageUrl: "https://images.unsplash.com/photo-1601924582970-9238b4ead50c?w=500&auto=format&fit=crop&q=60",
         discount: "₹50 OFF",
-        bestseller: false
+        bestseller: true
     },
     {
-        id: 3,
+        _id: "mock-3",
+        id: "mock-3",
         name: "Spicy Crunch Chicken Burger",
         category: "Burger",
         price: 149,
-        rating: 4.3,
+        rating: 4.5,
         time: "20-25 mins",
         isVeg: false,
         desc: "Crispy chicken patty topped with fresh lettuce, onions, and spicy chipotle sauce in soft brioche buns.",
         image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
+        imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
         discount: "20% OFF",
-        bestseller: true
-    },
-    {
-        id: 4,
-        name: "Paneer Butter Masala Combo",
-        category: "Thali",
-        price: 229,
-        rating: 4.5,
-        time: "30-35 mins",
-        isVeg: true,
-        desc: "Rich paneer cubes cooked in a sweet & creamy tomato gravy. Served with 2 butter naans.",
-        image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=60",
-        discount: "Buy 1 Get 1",
         bestseller: false
     },
     {
-        id: 5,
+        _id: "mock-4",
+        id: "mock-4",
+        name: "Paneer Butter Masala Combo",
+        category: "Main Course",
+        price: 229,
+        rating: 4.7,
+        time: "25-30 mins",
+        isVeg: true,
+        desc: "Rich cottage cheese cubes cooked in sweet & creamy tomato gravy. Served with 2 hot butter naans.",
+        image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=60",
+        imageUrl: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=60",
+        discount: "Chef Special",
+        bestseller: true
+    },
+    {
+        _id: "mock-5",
+        id: "mock-5",
         name: "Premium Chocolate Fudge Cake",
         category: "Dessert",
         price: 179,
-        rating: 4.7,
+        rating: 4.9,
         time: "10-15 mins",
         isVeg: true,
         desc: "Delectable, rich chocolate sponge cake loaded with smooth chocolate ganache and chocolate chips.",
         image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=60",
+        imageUrl: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=60",
         discount: "10% OFF",
         bestseller: true
     }
 ];
 
 const CATEGORIES = [
-    { name: "Biryani", image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=150&auto=format&fit=crop&q=60" },
-    { name: "Pizza", image: "https://images.unsplash.com/photo-1601924582970-9238b4ead50c?w=150&auto=format&fit=crop&q=60" },
-    { name: "Burger", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&auto=format&fit=crop&q=60" },
-    { name: "Thali", image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=150&auto=format&fit=crop&q=60" },
-    { name: "Dessert", image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=150&auto=format&fit=crop&q=60" }
+    { name: "Biryani", icon: "🍛", image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=150&auto=format&fit=crop&q=60" },
+    { name: "Pizza", icon: "🍕", image: "https://images.unsplash.com/photo-1601924582970-9238b4ead50c?w=150&auto=format&fit=crop&q=60" },
+    { name: "Burger", icon: "🍔", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&auto=format&fit=crop&q=60" },
+    { name: "Main Course", icon: "🥘", image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=150&auto=format&fit=crop&q=60" },
+    { name: "Starters", icon: "🥟", image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=150&auto=format&fit=crop&q=60" },
+    { name: "Dessert", icon: "🍰", image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=150&auto=format&fit=crop&q=60" }
 ];
 
 const Home = () => {
+    const navigate = useNavigate();
     const dispatch = useDispatch();
     const [foods, setFoods] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -103,20 +118,24 @@ const Home = () => {
     const [sortByPrice, setSortByPrice] = useState(""); // "asc", "desc", or ""
 
     const cartItems = useSelector((state) => state?.cart?.items || []);
-    const totalCartPrice = useSelector((state) => state?.cart?.totalCartAmount || 0);
-    const totalCartItems = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
     const handleAddToCart = (food) => {
-        console.log(food)
-        dispatch(addToCart(food));
+        const foodId = food._id || food.id || String(food.name);
+        const normalizedFood = {
+            ...food,
+            _id: foodId,
+            id: foodId,
+            name: food.name,
+            price: Number(food.price) || 0,
+            image_url: food.image_url || food.imageUrl || food.image,
+            imageUrl: food.imageUrl || food.image_url || food.image,
+            portion: typeof food.portion === 'string' ? food.portion : (food.portion?.full ? `Full (₹${food.portion.full})` : 'Single Serving')
+        };
+        dispatch(addToCart(normalizedFood));
     };
 
     const handleRemoveFromCart = (foodId) => {
         dispatch(removeFromCart(foodId));
-    };
-
-    const handleClearCart = () => {
-        dispatch(clearCart());
     };
 
     useEffect(() => {
@@ -125,11 +144,18 @@ const Home = () => {
                 setLoading(true);
                 const data = await allFoods();
                 const productsList = data.items || [];
-                setFoods(productsList);
+                if (productsList.length > 0) {
+                    setFoods(productsList.map(item => ({
+                        ...item,
+                        _id: item._id || item.id,
+                        imageUrl: item.image_url || item.imageUrl || item.image
+                    })));
+                } else {
+                    setFoods(FOODS);
+                }
             } catch (err) {
                 console.error("Error loading foods:", err);
                 setError(err.message);
-                // Fallback to static mock foods if API fails/empty to keep layout rich
                 setFoods(FOODS);
             } finally {
                 setLoading(false);
@@ -212,12 +238,15 @@ const Home = () => {
             {/* SECTION 1: PROMO BANNER CAROUSEL (Blinkit style) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Banner 1 */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 p-6 flex flex-col justify-center h-44 shadow-lg shadow-orange-500/10 group cursor-pointer">
+                <div 
+                    onClick={() => navigate('/menu')}
+                    className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 p-6 flex flex-col justify-center h-44 shadow-lg shadow-orange-500/10 group cursor-pointer hover:shadow-orange-500/20 transition-all duration-300"
+                >
                     <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full translate-x-12 -translate-y-12 transition-transform duration-500 group-hover:scale-110"></div>
                     <div className="z-10 flex flex-col gap-2">
                         <div>
                             <span className="bg-black/30 backdrop-blur-md text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full text-white">
-                                Special Deal
+                                Special Deal • First Order
                             </span>
                         </div>
                         <h2 className="text-xl md:text-2xl font-black leading-tight text-white">
@@ -225,7 +254,10 @@ const Home = () => {
                         </h2>
                         <div className="flex items-center justify-between gap-4 mt-1">
                             <p className="text-xs text-white/90">Use Code: <span className="font-bold border-b border-dashed border-white">STAR7WELCOME</span></p>
-                            <button className="flex items-center gap-1 bg-black text-white hover:bg-white hover:text-black transition-all px-4 py-1.5 rounded-full text-xs font-bold shadow-md cursor-pointer shrink-0">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); navigate('/menu'); }}
+                                className="flex items-center gap-1.5 bg-black text-white hover:bg-white hover:text-black transition-all px-4 py-1.5 rounded-full text-xs font-bold shadow-md cursor-pointer shrink-0"
+                            >
                                 Order Now <FaArrowRight className="text-[10px]" />
                             </button>
                         </div>
@@ -233,21 +265,27 @@ const Home = () => {
                 </div>
 
                 {/* Banner 2 */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 p-6 flex flex-col justify-center h-44 shadow-lg shadow-teal-500/10 group cursor-pointer">
+                <div 
+                    onClick={() => navigate('/menu')}
+                    className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 p-6 flex flex-col justify-center h-44 shadow-lg shadow-teal-500/10 group cursor-pointer hover:shadow-teal-500/20 transition-all duration-300"
+                >
                     <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full translate-x-12 -translate-y-12 transition-transform duration-500 group-hover:scale-110"></div>
                     <div className="z-10 flex flex-col gap-2">
                         <div>
                             <span className="bg-black/30 backdrop-blur-md text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full text-white">
-                                Free Delivery
+                                Free Fast Delivery
                             </span>
                         </div>
                         <h2 className="text-xl md:text-2xl font-black leading-tight text-white">
-                            FREE DELIVERY ON ALL DISHES
+                            FREE DELIVERY ON ALL ORDERS
                         </h2>
                         <div className="flex items-center justify-between gap-4 mt-1">
-                            <p className="text-xs text-white/90">On orders above ₹199. Fast delivery guaranteed.</p>
-                            <button className="flex items-center gap-1 bg-black text-white hover:bg-white hover:text-black transition-all px-4 py-1.5 rounded-full text-xs font-bold shadow-md cursor-pointer shrink-0">
-                                Check Dishes <FaArrowRight className="text-[10px]" />
+                            <p className="text-xs text-white/90">Fresh food delivered hot straight to your home.</p>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); navigate('/menu'); }}
+                                className="flex items-center gap-1.5 bg-black text-white hover:bg-white hover:text-black transition-all px-4 py-1.5 rounded-full text-xs font-bold shadow-md cursor-pointer shrink-0"
+                            >
+                                Explore Menu <FaArrowRight className="text-[10px]" />
                             </button>
                         </div>
                     </div>
@@ -533,40 +571,6 @@ const Home = () => {
                     </div>
                 </div>
             </div>
-
-            {/* SECTION 6: INTERACTIVE BOTTOM DRAWER (Blinkit style cart preview) */}
-            {totalCartItems > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white px-5 py-3 rounded-2xl flex items-center justify-between shadow-2xl z-[1000] animate-slideUp">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-black/20 p-2 rounded-xl text-white">
-                            <FaShoppingBag className="text-sm" />
-                        </div>
-                        <div>
-                            <span className="text-xs font-black block leading-none">
-                                {totalCartItems} {totalCartItems === 1 ? 'Item' : 'Items'} added
-                            </span>
-                            <span className="text-[10px] text-white/80 font-medium">
-                                Total: ₹{totalCartPrice}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={handleClearCart}
-                            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-xs flex items-center gap-1 font-semibold cursor-pointer"
-                        >
-                            <FaTrash className="text-[10px]" /> Clear
-                        </button>
-                        <button
-                            onClick={() => alert(`Order Proceeded!\nTotal items: ${totalCartItems}\nTotal amount: ₹${totalCartPrice}`)}
-                            className="bg-black hover:bg-white hover:text-black transition-all px-4 py-2 rounded-xl text-xs font-black shadow-md flex items-center gap-1 cursor-pointer"
-                        >
-                            View Cart <FaArrowRight className="text-[10px]" />
-                        </button>
-                    </div>
-                </div>
-            )}
 
             <style>{`
                 @keyframes slideUp {
