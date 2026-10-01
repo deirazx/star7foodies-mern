@@ -107,6 +107,16 @@ export const updateOrderStatusApi = async (id, status) => {
     }
 };
 
+export const cancelOrderApi = async (id) => {
+    try {
+        const response = await axios.put(`/api/orders/${id}/cancel`);
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Failed to cancel order.";
+        throw new Error(errorMessage, { cause: error });
+    }
+};
+
 // ==========================================
 // Admin Menu Management API Functions
 // ==========================================

@@ -178,4 +178,47 @@ const updateOrderStatus = async (req, res) => {
     }
 }
 
-module.exports = { createOrder, getAllOrders, myOrders, updateOrderStatus }
+/**
+ * Customer Order Cancellation
+ * Allows customers to cancel their order ONLY while status is still 'Pending' (before kitchen begins preparing).
+ */
+const cancelOrder = async (req, res) => {
+    try {
+        const id = req.params.id || req.body.id;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid order ID." });
+        }
+
+        const order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found." });
+        }
+
+        // Verify the customer owns this order (or is admin)
+        if (order.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: "Not authorized to cancel this order." });
+        }
+
+        // Business rule: Can only cancel before preparing in kitchen
+        if (order.status !== "Pending") {
+            return res.status(400).json({
+                message: `Cannot cancel order. The kitchen has already started ${order.status.toLowerCase()} your meal.`
+            });
+        }
+
+        order.status = "Cancelled";
+        await order.save();
+
+        return res.status(200).json({
+            message: "Your order has been cancelled successfully.",
+            order
+        });
+    } catch (error) {
+        console.error("Error cancelling order:", error);
+        return res.status(500).json({
+            message: error.message || "Failed to cancel order. Please try again."
+        });
+    }
+};
+
+module.exports = { createOrder, getAllOrders, myOrders, updateOrderStatus, cancelOrder }
