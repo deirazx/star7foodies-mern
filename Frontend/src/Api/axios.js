@@ -12,6 +12,16 @@ export const allFoods = async () => {
     }
 }
 
+export const getProductByIdApi = async (id) => {
+    try {
+        const response = await axios.get(`/api/products/${id}`);
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Something went wrong while getting dish details.";
+        throw new Error(errorMessage);
+    }
+}
+
 export const loginUser = async (loginData) => {
     try {
         const response = await axios.post("/api/users/login", loginData);

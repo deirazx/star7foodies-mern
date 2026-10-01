@@ -446,7 +446,7 @@ const Checkout = () => {
     // 4. MAIN CHECKOUT PAGE CONTENT
     // ==========================================
     return (
-        <div className="min-h-screen bg-[#0a0a0b] text-gray-100 py-8 px-4 sm:px-6 lg:px-8 pb-24">
+        <div className="min-h-screen bg-[#0a0a0b] text-gray-100 pt-24 sm:pt-28 md:pt-32 pb-24 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Top Breadcrumb & Return to Cart */}
                 <div className="flex items-center justify-between">

@@ -17,6 +17,7 @@ import {
 import { allFoods } from '../Api/axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { addToCart, removeFromCart } from '../Redux/Slices/cart.js';
+import PortionModal from '../Components/PortionModal';
 
 const FOODS = [
     {
@@ -118,8 +119,20 @@ const Home = () => {
     const [sortByPrice, setSortByPrice] = useState(""); // "asc", "desc", or ""
 
     const cartItems = useSelector((state) => state?.cart?.items || []);
+    const [portionModalDish, setPortionModalDish] = useState(null);
 
     const handleAddToCart = (food) => {
+        const rawP = food.rawPortion || food.portion;
+        const hasPortions = rawP && typeof rawP === 'object' && (Number(rawP.half) > 0 || Number(rawP.full) > 0);
+
+        if (hasPortions) {
+            setPortionModalDish({
+                ...food,
+                portion: rawP
+            });
+            return;
+        }
+
         const foodId = food._id || food.id || String(food.name);
         const normalizedFood = {
             ...food,
@@ -129,7 +142,7 @@ const Home = () => {
             price: Number(food.price) || 0,
             image_url: food.image_url || food.imageUrl || food.image,
             imageUrl: food.imageUrl || food.image_url || food.image,
-            portion: typeof food.portion === 'string' ? food.portion : (food.portion?.full ? `Full (₹${food.portion.full})` : 'Single Serving')
+            portion: typeof food.portion === 'string' ? food.portion : 'Standard Serving'
         };
         dispatch(addToCart(normalizedFood));
     };
@@ -431,8 +444,12 @@ const Home = () => {
                                     key={foodId}
                                     className="bg-[#121214] border border-white/5 rounded-2xl overflow-hidden hover:border-amber-500/30 hover:shadow-xl hover:shadow-black/40 transition-all duration-300 group flex flex-col justify-between"
                                 >
-                                    {/* Image Section */}
-                                    <div className="relative w-full h-44 overflow-hidden">
+                                    {/* Clickable Image Section */}
+                                    <div
+                                        className="relative w-full h-44 overflow-hidden cursor-pointer"
+                                        onClick={() => navigate(`/dish/${foodId}`)}
+                                        title={`View details for ${food.name}`}
+                                    >
                                         <img
                                             loading='lazy'
                                             src={imageUrl}
@@ -455,7 +472,11 @@ const Home = () => {
 
                                     {/* Content Section */}
                                     <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-                                        <div className="space-y-1.5">
+                                        <div
+                                            className="space-y-1.5 cursor-pointer"
+                                            onClick={() => navigate(`/dish/${foodId}`)}
+                                            title={`View details for ${food.name}`}
+                                        >
                                             {/* Veg / Non-Veg Icon & Rating */}
                                             <div className="flex items-center justify-between">
                                                 {/* Swiggy Green Dot / Red Dot Icon */}
@@ -496,7 +517,10 @@ const Home = () => {
                                             {/* Interactive Swiggy Style ADD button */}
                                             {qty === 0 ? (
                                                 <button
-                                                    onClick={() => handleAddToCart(food)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleAddToCart(food);
+                                                    }}
                                                     className="px-4 py-1.5 border border-amber-500/40 hover:border-amber-500 text-amber-500 font-black text-xs bg-amber-500/5 hover:bg-amber-500 hover:text-white rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                                 >
                                                     ADD
@@ -504,7 +528,10 @@ const Home = () => {
                                             ) : (
                                                 <div className="flex items-center bg-amber-500 text-white rounded-lg overflow-hidden shadow-md">
                                                     <button
-                                                        onClick={() => handleRemoveFromCart(foodId)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRemoveFromCart(foodId);
+                                                        }}
                                                         className="px-2.5 py-1.5 hover:bg-amber-600 transition-all font-bold text-xs cursor-pointer"
                                                     >
                                                         -
@@ -513,7 +540,10 @@ const Home = () => {
                                                         {qty}
                                                     </span>
                                                     <button
-                                                        onClick={() => handleAddToCart(food)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleAddToCart(food);
+                                                        }}
                                                         className="px-2.5 py-1.5 hover:bg-amber-600 transition-all font-bold text-xs cursor-pointer"
                                                     >
                                                         +
@@ -590,6 +620,17 @@ const Home = () => {
                     scrollbar-width: none;  /* Firefox */
                 }
             `}</style>
+
+            {/* Portion Selection Modal for Dishes with Portion Options */}
+            <PortionModal
+                isOpen={Boolean(portionModalDish)}
+                dish={portionModalDish}
+                onClose={() => setPortionModalDish(null)}
+                onAddToCart={(payload) => {
+                    dispatch(addToCart(payload));
+                    setPortionModalDish(null);
+                }}
+            />
         </div>
     );
 };

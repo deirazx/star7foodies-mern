@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { addToCart, removeFromCart } from '../Redux/Slices/cart.js';
 import { allFoods } from '../Api/axios';
+import PortionModal from '../Components/PortionModal';
 import {
     Search,
     Zap,
@@ -197,6 +198,7 @@ const CATEGORIES = [
 ];
 
 const Menu = () => {
+    const navigate = useNavigate();
     const dispatch = useDispatch();
     const cartItems = useSelector((state) => state?.cart?.items || []);
     const totalCartAmount = useSelector((state) => state?.cart?.totalCartAmount || 0);
@@ -209,6 +211,30 @@ const Menu = () => {
     const [sortBy, setSortBy] = useState('popular'); // 'popular' | 'price-low' | 'price-high' | 'rating'
     const [under199Only, setUnder199Only] = useState(false);
     const [wishlist, setWishlist] = useState({});
+    const [portionModalDish, setPortionModalDish] = useState(null);
+
+    const handleAddItem = (item) => {
+        const rawP = item.rawPortion || item.portion;
+        const hasPortions = rawP && typeof rawP === 'object' && (Number(rawP.half) > 0 || Number(rawP.full) > 0);
+
+        if (hasPortions) {
+            setPortionModalDish({
+                ...item,
+                portion: rawP
+            });
+            return;
+        }
+
+        dispatch(addToCart({
+            _id: item._id || item.id,
+            name: item.name,
+            price: Number(item.price),
+            imageUrl: item.image_url || item.imageUrl || item.image,
+            portion: typeof item.portion === 'string' ? item.portion : 'Standard Serving',
+            quantity: 1,
+            category: item.category
+        }));
+    };
 
     // Fetch foods from backend API
     useEffect(() => {
@@ -228,9 +254,11 @@ const Menu = () => {
                                 : !(/chicken|meat|mutton|fish|beef|pork|egg|prawn/i.test(item.name)),
                             time: item.time || "25-28 mins",
                             rating: item.rating || (4.2 + (item.name.length % 7) / 10).toFixed(1),
-                            portion: item.portion?.half
+                            rawPortion: item.portion,
+                            portion: item.portion,
+                            portionText: (typeof item.portion === 'object' && item.portion?.half)
                                 ? `Half ₹${item.portion.half} • Full ₹${item.portion.full || item.price}`
-                                : "Single Serving",
+                                : (typeof item.portion === 'string' ? item.portion : "Single Serving"),
                             originalPrice: item.originalPrice || Math.round(item.price * 1.25),
                             discount: item.discount || "20% OFF",
                             isBestseller: item.isBestseller || (item.name.length % 2 === 0)
@@ -573,79 +601,89 @@ const Menu = () => {
                                             className="group bg-[#121215] hover:bg-[#16161a] border border-white/5 hover:border-amber-500/30 rounded-2xl p-2.5 md:p-3 flex flex-col justify-between transition-all duration-200 hover:shadow-xl hover:shadow-amber-950/20 relative"
                                         >
                                             <div>
-                                                {/* Top Image Container */}
-                                                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-neutral-900 mb-2.5">
-                                                    <img
-                                                        src={imageUrl}
-                                                        alt={item.name}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                        loading="lazy"
-                                                        onError={(e) => {
-                                                            e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop";
-                                                        }}
-                                                    />
+                                                {/* Top Image & Details Container - Click to View Dish Details */}
+                                                <div
+                                                    className="cursor-pointer"
+                                                    onClick={() => navigate(`/dish/${itemId}`)}
+                                                    title={`View details for ${item.name}`}
+                                                >
+                                                    {/* Top Image Container */}
+                                                    <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-neutral-900 mb-2.5">
+                                                        <img
+                                                            src={imageUrl}
+                                                            alt={item.name}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            loading="lazy"
+                                                            onError={(e) => {
+                                                                e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop";
+                                                            }}
+                                                        />
 
-                                                    {/* Top Overlay Badges */}
-                                                    <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                                                        {/* Veg / Non-Veg Indicator */}
-                                                        <div className="w-4 h-4 bg-black/60 backdrop-blur-md rounded border border-white/20 flex items-center justify-center p-[2px]">
-                                                            {isVeg ? (
-                                                                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span>
-                                                            ) : (
-                                                                <span className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-rose-500"></span>
+                                                        {/* Top Overlay Badges */}
+                                                        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                                                            {/* Veg / Non-Veg Indicator */}
+                                                            <div className="w-4 h-4 bg-black/60 backdrop-blur-md rounded border border-white/20 flex items-center justify-center p-[2px]">
+                                                                {isVeg ? (
+                                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span>
+                                                                ) : (
+                                                                    <span className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[6px] border-b-rose-500"></span>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Bestseller Badge */}
+                                                            {item.isBestseller && (
+                                                                <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
+                                                                    <Flame className="w-2.5 h-2.5 fill-black" />
+                                                                    HOT
+                                                                </span>
                                                             )}
                                                         </div>
 
-                                                        {/* Bestseller Badge */}
-                                                        {item.isBestseller && (
-                                                            <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
-                                                                <Flame className="w-2.5 h-2.5 fill-black" />
-                                                                HOT
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                        {/* Favorite Heart Button */}
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleWishlist(itemId);
+                                                            }}
+                                                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-gray-300 hover:text-red-500 transition-all cursor-pointer"
+                                                            title="Add to Wishlist"
+                                                        >
+                                                            <Heart className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500 fill-red-500' : ''}`} />
+                                                        </button>
 
-                                                    {/* Favorite Heart Button */}
-                                                    <button
-                                                        onClick={() => toggleWishlist(itemId)}
-                                                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-gray-300 hover:text-red-500 transition-all cursor-pointer"
-                                                        title="Add to Wishlist"
-                                                    >
-                                                        <Heart className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500 fill-red-500' : ''}`} />
-                                                    </button>
-
-                                                    {/* Delivery Time Pill */}
-                                                    <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-md border border-white/10 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                                                        <Clock className="w-2.5 h-2.5 text-amber-400" />
-                                                        <span>{item.time || "25-28 mins"}</span>
-                                                    </div>
-
-                                                    {/* Discount Tag */}
-                                                    {item.discount && (
-                                                        <div className="absolute bottom-2 right-2 bg-gradient-to-r from-orange-600 to-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">
-                                                            {item.discount}
+                                                        {/* Delivery Time Pill */}
+                                                        <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-md border border-white/10 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                                                            <Clock className="w-2.5 h-2.5 text-amber-400" />
+                                                            <span>{item.time || "25-28 mins"}</span>
                                                         </div>
-                                                    )}
-                                                </div>
 
-                                                {/* Dish Title & Portion */}
-                                                <div>
-                                                    <div className="flex items-center gap-1 text-[11px] text-gray-400 mb-0.5">
-                                                        <span>{item.portion || "Standard Serving"}</span>
-                                                        {item.rating && (
-                                                            <>
-                                                                <span>•</span>
-                                                                <span className="flex items-center text-amber-400 font-semibold">
-                                                                    <Star className="w-2.5 h-2.5 fill-amber-400 mr-0.5" />
-                                                                    {item.rating}
-                                                                </span>
-                                                            </>
+                                                        {/* Discount Tag */}
+                                                        {item.discount && (
+                                                            <div className="absolute bottom-2 right-2 bg-gradient-to-r from-orange-600 to-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">
+                                                                {item.discount}
+                                                            </div>
                                                         )}
                                                     </div>
 
-                                                    <h3 className="font-bold text-white text-xs md:text-sm line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">
-                                                        {item.name}
-                                                    </h3>
+                                                    {/* Dish Title & Portion */}
+                                                    <div>
+                                                        <div className="flex items-center gap-1 text-[11px] text-gray-400 mb-0.5">
+                                                            <span>{item.portionText || (typeof item.portion === 'string' ? item.portion : "Standard Serving")}</span>
+                                                            {item.rating && (
+                                                                <>
+                                                                    <span>•</span>
+                                                                    <span className="flex items-center text-amber-400 font-semibold">
+                                                                        <Star className="w-2.5 h-2.5 fill-amber-400 mr-0.5" />
+                                                                        {item.rating}
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </div>
+
+                                                        <h3 className="font-bold text-white text-xs md:text-sm line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">
+                                                            {item.name}
+                                                        </h3>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -666,13 +704,10 @@ const Menu = () => {
                                                 <div>
                                                     {qty === 0 ? (
                                                         <button
-                                                            onClick={() => dispatch(addToCart({
-                                                                _id: itemId,
-                                                                name: item.name,
-                                                                price: Number(item.price),
-                                                                imageUrl: imageUrl,
-                                                                quantity: 1
-                                                            }))}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleAddItem(item);
+                                                            }}
                                                             className="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/40 hover:border-amber-500 text-amber-400 hover:text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center gap-1 cursor-pointer"
                                                         >
                                                             <span>ADD</span>
@@ -681,7 +716,10 @@ const Menu = () => {
                                                     ) : (
                                                         <div className="flex items-center bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black rounded-xl overflow-hidden shadow-md shadow-amber-500/20">
                                                             <button
-                                                                onClick={() => dispatch(removeFromCart(itemId))}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    dispatch(removeFromCart(itemId));
+                                                                }}
                                                                 className="px-2 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
                                                                 title="Decrease"
                                                             >
@@ -691,13 +729,10 @@ const Menu = () => {
                                                                 {qty}
                                                             </span>
                                                             <button
-                                                                onClick={() => dispatch(addToCart({
-                                                                    _id: itemId,
-                                                                    name: item.name,
-                                                                    price: Number(item.price),
-                                                                    imageUrl: imageUrl,
-                                                                    quantity: 1
-                                                                }))}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAddItem(item);
+                                                                }}
                                                                 className="px-2 py-1.5 hover:bg-black/15 transition-colors cursor-pointer"
                                                                 title="Increase"
                                                             >
@@ -715,6 +750,17 @@ const Menu = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Portion Selection Modal for Dishes with Portion Options */}
+            <PortionModal
+                isOpen={Boolean(portionModalDish)}
+                dish={portionModalDish}
+                onClose={() => setPortionModalDish(null)}
+                onAddToCart={(payload) => {
+                    dispatch(addToCart(payload));
+                    setPortionModalDish(null);
+                }}
+            />
         </div>
     );
 };

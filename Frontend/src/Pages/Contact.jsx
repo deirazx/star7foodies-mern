@@ -129,7 +129,7 @@ const Contact = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0b] text-white pt-20 md:pt-24 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="min-h-screen bg-[#0a0a0b] text-white pt-24 sm:pt-28 md:pt-32 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             {/* Ambient Background Glows */}
             <div
                 className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl pointer-events-none"

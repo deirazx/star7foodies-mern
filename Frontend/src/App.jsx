@@ -12,6 +12,7 @@ import Cart from './Pages/Cart';
 import Admin from './Pages/Admin';
 import Menu from './Pages/Menu';
 import Checkout from './Pages/Checkout';
+import ItemDetails from './Pages/ItemDetails';
 
 const App = () => {
     return (
@@ -23,6 +24,8 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/menu" element={<Menu />} />
+                <Route path="/dish/:id" element={<ItemDetails />} />
+                <Route path="/item/:id" element={<ItemDetails />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Signup />} />
                 <Route path="/about" element={<About />} />
