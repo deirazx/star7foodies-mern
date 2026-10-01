@@ -2,9 +2,13 @@ const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
     productId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.Mixed,
         ref: "Product",
         required: true
+    },
+    name: {
+        type: String,
+        default: ""
     },
     qnty: {
         type: Number,
@@ -17,7 +21,7 @@ const productSchema = new mongoose.Schema({
         required: true
     },
     portion: {
-        type: String,
+        type: mongoose.Schema.Types.Mixed,
         default: "Single Serving"
     }
 })

@@ -34,11 +34,37 @@ const createOrder = async (req, res) => {
             });
         }
 
+        // Sanitize and format each order item to safely handle string or object portions
+        const sanitizedItems = items.map((item) => {
+            let portionVal = "Single Serving";
+            if (typeof item.portion === "string" && item.portion.trim()) {
+                portionVal = item.portion.trim();
+            } else if (typeof item.portion === "object" && item.portion !== null) {
+                if (item.portion.half && item.portion.full) {
+                    portionVal = `Half (₹${item.portion.half}) / Full (₹${item.portion.full})`;
+                } else if (item.portion.half) {
+                    portionVal = `Half (₹${item.portion.half})`;
+                } else if (item.portion.full) {
+                    portionVal = `Full (₹${item.portion.full})`;
+                } else {
+                    portionVal = "Standard Portion";
+                }
+            }
+
+            return {
+                productId: item.productId || item._id || item.id,
+                name: item.name || "Food Item",
+                price: Number(item.price) || 0,
+                qnty: Number(item.qnty || item.quantity) || 1,
+                portion: portionVal
+            };
+        });
+
         const newOrder = new Order({
             userId: resolvedUserId,
-            items,
+            items: sanitizedItems,
             address,
-            totalCartPrice,
+            totalCartPrice: Number(totalCartPrice),
             paymentMethod: req.body.paymentMethod || "COD"
         });
 
@@ -52,7 +78,7 @@ const createOrder = async (req, res) => {
     } catch (error) {
         console.error("Error while placing order:", error);
         return res.status(500).json({
-            message: "Something went wrong while placing the order. Please try again."
+            message: error.message || "Something went wrong while placing the order. Please try again."
         });
     }
 }

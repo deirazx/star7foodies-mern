@@ -195,12 +195,30 @@ const Checkout = () => {
         try {
             // Format order payload matching Backend order.model.js
             const orderPayload = {
-                items: cartItems.map(item => ({
-                    productId: item._id || item.id,
-                    qnty: item.quantity || 1,
-                    price: item.price,
-                    portion: item.portion || "Single Serving"
-                })),
+                items: cartItems.map(item => {
+                    let formattedPortion = "Single Serving";
+                    if (typeof item.portion === 'string' && item.portion.trim()) {
+                        formattedPortion = item.portion.trim();
+                    } else if (typeof item.portion === 'object' && item.portion !== null) {
+                        if (item.portion.half && item.portion.full) {
+                            formattedPortion = `Half (₹${item.portion.half}) / Full (₹${item.portion.full})`;
+                        } else if (item.portion.half) {
+                            formattedPortion = `Half (₹${item.portion.half})`;
+                        } else if (item.portion.full) {
+                            formattedPortion = `Full (₹${item.portion.full})`;
+                        } else {
+                            formattedPortion = "Standard Portion";
+                        }
+                    }
+
+                    return {
+                        productId: item._id || item.id,
+                        name: item.name || "Food Item",
+                        qnty: item.quantity || 1,
+                        price: Number(item.price),
+                        portion: formattedPortion
+                    };
+                }),
                 totalCartPrice: grandTotal,
                 address: {
                     name: formData.fullName.trim(),
