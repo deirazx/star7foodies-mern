@@ -349,7 +349,7 @@ const Menu = () => {
     }, [cartItems]);
 
     return (
-        <div className="min-h-screen bg-[#0a0a0b] text-gray-100 pb-28 md:pb-24 pt-4 ">
+        <div className="min-h-screen bg-[#0a0a0b] text-gray-100 pb-28 md:pb-24 pt-0">
             {/* Top Quick-Delivery & Search Banner (Harmonized with Star7Foodies Brand Colors) */}
             <div className="bg-[#111114]/90 border-b border-white/5 sticky top-16 md:top-20 z-40 backdrop-blur-xl shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">

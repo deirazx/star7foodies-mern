@@ -196,7 +196,7 @@ const ItemDetails = () => {
     // Loading State
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0a0a0b] text-white pt-24 sm:pt-28 md:pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-[#0a0a0b] text-white py-6 sm:py-8 pb-24 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-6xl mx-auto space-y-8 animate-pulse">
                     <div className="h-4 bg-white/10 rounded w-48" />
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -218,7 +218,7 @@ const ItemDetails = () => {
     // Error / Not Found State
     if (error || !dish) {
         return (
-            <div className="min-h-screen bg-[#0a0a0b] text-white pt-24 sm:pt-28 md:pt-32 pb-24 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+            <div className="min-h-screen bg-[#0a0a0b] text-white py-8 pb-24 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                 <div className="text-center space-y-4 max-w-md bg-[#121214] border border-white/5 p-8 rounded-3xl shadow-2xl">
                     <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
                         <AlertCircle className="w-8 h-8" />
@@ -251,7 +251,7 @@ const ItemDetails = () => {
     const isAvailable = dish.is_available !== undefined ? dish.is_available : (dish.isAvailable ?? true);
 
     return (
-        <div className="min-h-screen bg-[#0a0a0b] text-white pt-24 sm:pt-28 md:pt-32 pb-28 md:pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="min-h-screen bg-[#0a0a0b] text-white py-6 sm:py-8 pb-28 md:pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             {/* Ambient Background Glows */}
             <div
                 className="absolute top-24 left-1/4 -translate-x-1/2 rounded-full blur-3xl pointer-events-none"

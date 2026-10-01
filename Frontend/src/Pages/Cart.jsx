@@ -67,7 +67,7 @@ const Cart = () => {
     /* ── Empty Cart ─────────────────────────────────────────── */
     if (cartItems.length === 0) {
         return (
-            <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 pt-24 md:pt-28 text-center">
+            <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-8 text-center">
                 <div className="relative w-28 h-28 mb-6">
                     <div className="w-28 h-28 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                         <FaShoppingBag className="text-5xl text-amber-500/60" />
@@ -92,7 +92,7 @@ const Cart = () => {
 
     /* ── Filled Cart ─────────────────────────────────────────── */
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 md:pt-32 pb-24 animate-fadeIn">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 animate-fadeIn">
 
             {/* ── Header ── */}
             <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
