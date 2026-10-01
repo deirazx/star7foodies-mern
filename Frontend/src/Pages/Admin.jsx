@@ -171,11 +171,13 @@ const Admin = () => {
     const [loadingOrders, setLoadingOrders] = useState(false);
     const [ordersError, setOrdersError] = useState(null);
     const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+    const [orderPeriod, setOrderPeriod] = useState('all'); // 'all' | 'today' | 'month'
     const [orderSearchTerm, setOrderSearchTerm] = useState('');
     const [orderSort, setOrderSort] = useState('newest'); // 'newest' | 'oldest' | 'amount-high' | 'amount-low'
     const [updatingOrderId, setUpdatingOrderId] = useState(null);
     const [copiedOrderId, setCopiedOrderId] = useState(null);
     const [activeKOTOrder, setActiveKOTOrder] = useState(null);
+    const [underDevFeature, setUnderDevFeature] = useState(null);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -258,6 +260,10 @@ const Admin = () => {
     // Update Order Status Handler
     const handleUpdateOrderStatus = async (orderId, newStatus) => {
         if (!orderId || !newStatus) return;
+        if (newStatus === 'Cancelled') {
+            const confirmed = window.confirm("Are you sure you want to cancel this order? It will be strictly excluded from all sales revenue.");
+            if (!confirmed) return;
+        }
         try {
             setUpdatingOrderId(orderId);
             await updateOrderStatusApi(orderId, newStatus);
@@ -281,8 +287,28 @@ const Admin = () => {
         setTimeout(() => setCopiedOrderId(null), 2000);
     };
 
-    // Order Statistics
+    // Order Statistics with Today, Month-to-date and Lifetime metrics
     const orderMetrics = useMemo(() => {
+        const now = new Date();
+        const isToday = (dateStr) => {
+            if (!dateStr) return false;
+            const d = new Date(dateStr);
+            return (
+                d.getDate() === now.getDate() &&
+                d.getMonth() === now.getMonth() &&
+                d.getFullYear() === now.getFullYear()
+            );
+        };
+
+        const isThisMonth = (dateStr) => {
+            if (!dateStr) return false;
+            const d = new Date(dateStr);
+            return (
+                d.getMonth() === now.getMonth() &&
+                d.getFullYear() === now.getFullYear()
+            );
+        };
+
         const total = orders.length;
         let pending = 0;
         let preparing = 0;
@@ -290,22 +316,59 @@ const Admin = () => {
         let delivered = 0;
         let cancelled = 0;
         let totalRevenue = 0;
+        let cancelledRevenue = 0;
+
+        let todayOrdersCount = 0;
+        let todayRevenue = 0;
+        let todayCancelledCount = 0;
+
+        let monthOrdersCount = 0;
+        let monthRevenue = 0;
+        let monthCancelledCount = 0;
 
         orders.forEach(o => {
             const st = o.status || 'Pending';
+            const amount = Number(o.totalCartPrice || o.totalAmount || 0);
+            const created = o.createdAt;
+
             if (st === 'Pending') pending++;
             else if (st === 'Preparing') preparing++;
             else if (st === 'Out for Delivery') outForDelivery++;
             else if (st === 'Delivered') delivered++;
-            else if (st === 'Cancelled') cancelled++;
+            else if (st === 'Cancelled') {
+                cancelled++;
+                cancelledRevenue += amount;
+            }
 
+            // Exclude Cancelled orders from all revenue totals
             if (st !== 'Cancelled') {
-                totalRevenue += (o.totalCartPrice || o.totalAmount || 0);
+                totalRevenue += amount;
+            }
+
+            // Check Today's Orders
+            if (isToday(created)) {
+                todayOrdersCount++;
+                if (st !== 'Cancelled') {
+                    todayRevenue += amount;
+                } else {
+                    todayCancelledCount++;
+                }
+            }
+
+            // Check This Month's Orders
+            if (isThisMonth(created)) {
+                monthOrdersCount++;
+                if (st !== 'Cancelled') {
+                    monthRevenue += amount;
+                } else {
+                    monthCancelledCount++;
+                }
             }
         });
 
         const activeCount = pending + preparing + outForDelivery;
-        const avgOrderValue = total > 0 ? Math.round(totalRevenue / (total - cancelled || 1)) : 0;
+        const validOrdersCount = total - cancelled;
+        const avgOrderValue = validOrdersCount > 0 ? Math.round(totalRevenue / validOrdersCount) : 0;
 
         return {
             total,
@@ -314,15 +377,43 @@ const Admin = () => {
             outForDelivery,
             delivered,
             cancelled,
+            cancelledRevenue,
             activeCount,
             totalRevenue,
-            avgOrderValue
+            avgOrderValue,
+            todayOrdersCount,
+            todayRevenue,
+            todayCancelledCount,
+            monthOrdersCount,
+            monthRevenue,
+            monthCancelledCount
         };
     }, [orders]);
 
     // Filtered & Sorted Orders
     const filteredOrders = useMemo(() => {
+        const now = new Date();
         return orders.filter(o => {
+            // Period Filter: 'today' | 'month' | 'all'
+            if (orderPeriod === 'today') {
+                const d = new Date(o.createdAt);
+                if (
+                    d.getDate() !== now.getDate() ||
+                    d.getMonth() !== now.getMonth() ||
+                    d.getFullYear() !== now.getFullYear()
+                ) {
+                    return false;
+                }
+            } else if (orderPeriod === 'month') {
+                const d = new Date(o.createdAt);
+                if (
+                    d.getMonth() !== now.getMonth() ||
+                    d.getFullYear() !== now.getFullYear()
+                ) {
+                    return false;
+                }
+            }
+
             // Status Tab Filter
             if (orderStatusFilter !== 'all' && (o.status || 'Pending') !== orderStatusFilter) {
                 return false;
@@ -358,7 +449,7 @@ const Admin = () => {
             }
             return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         });
-    }, [orders, orderStatusFilter, orderSearchTerm, orderSort]);
+    }, [orders, orderPeriod, orderStatusFilter, orderSearchTerm, orderSort]);
 
     // Handle Form Input Changes
     const handleInputChange = (e) => {
@@ -640,61 +731,102 @@ const Admin = () => {
                         </div>
                     </div>
 
-                    {/* Filter & Search Bar */}
-                    <div className="bg-[#121214] border border-white/5 p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
-                        {/* Search Input */}
-                        <div className="relative w-full md:w-80">
-                            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <input
-                                type="text"
-                                placeholder="Search by item name, description..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-[#18181b] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
-                            />
-                            {searchTerm && (
-                                <button
-                                    onClick={() => setSearchTerm('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
-                                >
-                                    <X className="w-3.5 h-3.5" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Category & Status Filter */}
-                        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                            <select
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="bg-[#18181b] border border-white/10 rounded-xl px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                    {/* Filter & Search Bar with Quick Stock Filters */}
+                    <div className="bg-[#121214] border border-white/5 p-4 rounded-2xl space-y-4 shadow-sm">
+                        {/* Quick Stock Filter Pills (Direct stock filtering so admin never has to hunt manually) */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                            <button
+                                onClick={() => setStatusFilter('all')}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
+                                    statusFilter === 'all'
+                                        ? 'bg-amber-500 text-black shadow-md font-bold'
+                                        : 'bg-[#18181b] text-gray-400 hover:text-white border border-white/5'
+                                }`}
                             >
-                                {CATEGORIES.map(cat => (
-                                    <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="bg-[#18181b] border border-white/10 rounded-xl px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-amber-500/50 cursor-pointer"
-                            >
-                                <option value="all">All Statuses</option>
-                                <option value="available">Available Only</option>
-                                <option value="unavailable">Archived Only</option>
-                            </select>
+                                <span>All Items</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${statusFilter === 'all' ? 'bg-black/20 text-black' : 'bg-white/5 text-gray-400'}`}>
+                                    {menuStats.total || menuItems.length}
+                                </span>
+                            </button>
 
                             <button
-                                onClick={fetchMenu}
-                                className="p-2 bg-[#18181b] border border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-white/20 transition-all cursor-pointer"
-                                title="Refresh menu"
+                                onClick={() => setStatusFilter('available')}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
+                                    statusFilter === 'available'
+                                        ? 'bg-emerald-500 text-black shadow-md font-bold'
+                                        : 'bg-[#18181b] text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/20'
+                                }`}
                             >
-                                <RefreshCw className={`w-4 h-4 ${loadingMenu ? 'animate-spin text-amber-400' : ''}`} />
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span>In Stock / Live</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${statusFilter === 'available' ? 'bg-black/20 text-black' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                                    {menuStats.available}
+                                </span>
                             </button>
+
+                            <button
+                                onClick={() => setStatusFilter('unavailable')}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
+                                    statusFilter === 'unavailable'
+                                        ? 'bg-rose-500 text-white shadow-md font-bold'
+                                        : 'bg-[#18181b] text-rose-400 hover:bg-rose-500/10 border border-rose-500/20'
+                                }`}
+                            >
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                <span>Out of Stock / Unavailable</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${statusFilter === 'unavailable' ? 'bg-white/20 text-white' : 'bg-rose-500/20 text-rose-300 font-bold'}`}>
+                                    {menuStats.unavailable}
+                                </span>
+                            </button>
+                        </div>
+
+                        {/* Search and Category Filter Row */}
+                        <div className="flex flex-col md:flex-row gap-3 items-center justify-between pt-1 border-t border-white/5">
+                            {/* Search Input */}
+                            <div className="relative w-full md:w-80">
+                                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by item name, category, desc..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-[#18181b] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Category Filter & Refresh */}
+                            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="bg-[#18181b] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                                >
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
+                                    ))}
+                                </select>
+
+                                <button
+                                    onClick={fetchMenu}
+                                    className="p-2 bg-[#18181b] border border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-white/20 transition-all cursor-pointer flex items-center gap-1.5 text-xs"
+                                    title="Refresh menu catalogue"
+                                >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${loadingMenu ? 'animate-spin text-amber-400' : ''}`} />
+                                    <span className="hidden sm:inline">Refresh</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Menu Items Table */}
+                    {/* Menu Items Container (Responsive: Mobile Cards + Desktop Table) */}
                     <div className="bg-[#121214] border border-white/5 rounded-2xl overflow-hidden shadow-sm">
                         {loadingMenu ? (
                             <div className="py-20 text-center text-gray-400 space-y-2">
@@ -717,138 +849,231 @@ const Admin = () => {
                                 <Utensils className="w-12 h-12 mx-auto text-gray-600" />
                                 <p className="text-base font-medium text-gray-300">No menu items found</p>
                                 <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                                    No items match the current query or category filter. Click "Add Menu Item" above to create one.
+                                    {statusFilter !== 'all' || searchTerm
+                                        ? `No items match filter "${statusFilter !== 'all' ? statusFilter : ''} ${searchTerm}".`
+                                        : 'Click "Add Menu Item" above to publish a new dish.'}
                                 </p>
+                                {(statusFilter !== 'all' || searchTerm) && (
+                                    <button
+                                        onClick={() => { setStatusFilter('all'); setSearchTerm(''); }}
+                                        className="px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-semibold hover:bg-amber-500 hover:text-black transition-all cursor-pointer"
+                                    >
+                                        Reset Menu Filters
+                                    </button>
+                                )}
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse text-sm">
-                                    <thead>
-                                        <tr className="border-b border-white/5 text-gray-400 text-xs uppercase tracking-wider bg-white/[0.02]">
-                                            <th className="py-3.5 px-4 font-semibold">Item & Details</th>
-                                            <th className="py-3.5 px-4 font-semibold">Category</th>
-                                            <th className="py-3.5 px-4 font-semibold">Price</th>
-                                            <th className="py-3.5 px-4 font-semibold">Stock Status</th>
-                                            <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        {menuItems.map((item) => {
-                                            const isAvailable = item.is_available !== undefined ? item.is_available : (item.isAvailable ?? true);
-                                            const imageUrl = item.image_url || item.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop";
+                            <>
+                                {/* ── MOBILE VIEW: Touch-friendly cards for smartphone users (< md) ── */}
+                                <div className="block md:hidden divide-y divide-white/5">
+                                    {menuItems.map((item) => {
+                                        const isAvailable = item.is_available !== undefined ? item.is_available : (item.isAvailable ?? true);
+                                        const imageUrl = item.image_url || item.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop";
+                                        const isThisToggling = togglingId === (item._id || item.id);
 
-                                            return (
-                                                <tr
-                                                    key={item._id || item.id}
-                                                    className={`hover:bg-white/[0.02] transition-colors ${!isAvailable ? 'opacity-60 bg-black/20' : ''
-                                                        }`}
-                                                >
-                                                    {/* Item Info */}
-                                                    <td className="py-3.5 px-4">
-                                                        <div className="flex items-center gap-3.5">
-                                                            <img
-                                                                src={imageUrl}
-                                                                alt={item.name}
-                                                                className="w-12 h-12 rounded-xl object-cover bg-neutral-900 border border-white/10 shrink-0"
-                                                                onError={(e) => {
-                                                                    e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop";
-                                                                }}
-                                                            />
-                                                            <div className="min-w-0">
-                                                                <h4 className="font-semibold text-white truncate text-sm">
-                                                                    {item.name}
-                                                                </h4>
-                                                                <p className="text-xs text-gray-400 line-clamp-1 max-w-xs mt-0.5">
-                                                                    {item.description}
-                                                                </p>
-                                                            </div>
+                                        return (
+                                            <div
+                                                key={item._id || item.id}
+                                                className={`p-4 space-y-3 transition-colors ${!isAvailable ? 'bg-rose-950/10 opacity-75' : ''}`}
+                                            >
+                                                {/* Top row: Image, Name, Category, Price */}
+                                                <div className="flex items-start gap-3">
+                                                    <img
+                                                        src={imageUrl}
+                                                        alt={item.name}
+                                                        className="w-16 h-16 rounded-xl object-cover bg-neutral-900 border border-white/10 shrink-0"
+                                                        onError={(e) => {
+                                                            e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop";
+                                                        }}
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <h4 className="font-semibold text-white text-sm truncate">{item.name}</h4>
+                                                            <span className="font-bold text-amber-400 text-sm shrink-0">
+                                                                ₹{Number(item.price).toFixed(2)}
+                                                            </span>
                                                         </div>
-                                                    </td>
-
-                                                    {/* Category */}
-                                                    <td className="py-3.5 px-4">
-                                                        <span className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-xs font-medium text-gray-300">
+                                                        <span className="inline-block mt-1 px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[10px] text-gray-300">
                                                             {item.category || "General"}
                                                         </span>
-                                                    </td>
+                                                        <p className="text-xs text-gray-400 line-clamp-1 mt-1">
+                                                            {item.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                                                    {/* Price */}
-                                                    <td className="py-3.5 px-4 font-semibold text-amber-400">
-                                                        ₹{Number(item.price).toFixed(2)}
-                                                    </td>
+                                                {/* Bottom row: Stock Toggle Button & Actions */}
+                                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                                                    {/* Easy 1-tap Stock Toggle Button */}
+                                                    <button
+                                                        disabled={isThisToggling}
+                                                        onClick={() => handleToggleStatus(item)}
+                                                        className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                                                            isAvailable
+                                                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                                                                : 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
+                                                        }`}
+                                                    >
+                                                        {isThisToggling ? (
+                                                            <>
+                                                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                                                <span>Updating...</span>
+                                                            </>
+                                                        ) : isAvailable ? (
+                                                            <>
+                                                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                                                <span>In Stock (Tap to Disable)</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                                                                <span>Out of Stock (Tap to Enable)</span>
+                                                            </>
+                                                        )}
+                                                    </button>
 
-                                                    {/* Status Toggle Switch */}
-                                                    <td className="py-3.5 px-4">
-                                                        {(() => {
-                                                            const isThisToggling = togglingId === (item._id || item.id);
-                                                            return (
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() => handleOpenModal(item)}
+                                                            className="p-2 text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all cursor-pointer"
+                                                            title="Edit Menu Item"
+                                                        >
+                                                            <Edit3 className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(item, false)}
+                                                            className="p-2 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
+                                                            title="Archive / Soft Delete"
+                                                        >
+                                                            <Archive className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* ── DESKTOP VIEW: Full table for larger screens (>= md) ── */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <table className="w-full text-left border-collapse text-sm">
+                                        <thead>
+                                            <tr className="border-b border-white/5 text-gray-400 text-xs uppercase tracking-wider bg-white/[0.02]">
+                                                <th className="py-3.5 px-4 font-semibold">Item & Details</th>
+                                                <th className="py-3.5 px-4 font-semibold">Category</th>
+                                                <th className="py-3.5 px-4 font-semibold">Price</th>
+                                                <th className="py-3.5 px-4 font-semibold">Stock Status</th>
+                                                <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {menuItems.map((item) => {
+                                                const isAvailable = item.is_available !== undefined ? item.is_available : (item.isAvailable ?? true);
+                                                const imageUrl = item.image_url || item.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop";
+                                                const isThisToggling = togglingId === (item._id || item.id);
+
+                                                return (
+                                                    <tr
+                                                        key={item._id || item.id}
+                                                        className={`hover:bg-white/[0.02] transition-colors ${!isAvailable ? 'opacity-60 bg-black/20' : ''}`}
+                                                    >
+                                                        {/* Item Info */}
+                                                        <td className="py-3.5 px-4">
+                                                            <div className="flex items-center gap-3.5">
+                                                                <img
+                                                                    src={imageUrl}
+                                                                    alt={item.name}
+                                                                    className="w-12 h-12 rounded-xl object-cover bg-neutral-900 border border-white/10 shrink-0"
+                                                                    onError={(e) => {
+                                                                        e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop";
+                                                                    }}
+                                                                />
+                                                                <div className="min-w-0">
+                                                                    <h4 className="font-semibold text-white truncate text-sm">
+                                                                        {item.name}
+                                                                    </h4>
+                                                                    <p className="text-xs text-gray-400 line-clamp-1 max-w-xs mt-0.5">
+                                                                        {item.description}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Category */}
+                                                        <td className="py-3.5 px-4">
+                                                            <span className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-xs font-medium text-gray-300">
+                                                                {item.category || "General"}
+                                                            </span>
+                                                        </td>
+
+                                                        {/* Price */}
+                                                        <td className="py-3.5 px-4 font-semibold text-amber-400">
+                                                            ₹{Number(item.price).toFixed(2)}
+                                                        </td>
+
+                                                        {/* Status Toggle Switch */}
+                                                        <td className="py-3.5 px-4">
+                                                            <button
+                                                                disabled={isThisToggling}
+                                                                onClick={() => handleToggleStatus(item)}
+                                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${isAvailable
+                                                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                                                                    : 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
+                                                                }`}
+                                                                title="Click to toggle availability"
+                                                            >
+                                                                {isThisToggling ? (
+                                                                    <>
+                                                                        <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
+                                                                        Updating...
+                                                                    </>
+                                                                ) : isAvailable ? (
+                                                                    <>
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                                        Available
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                                                        Archived / Out
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </td>
+
+                                                        {/* Action Buttons */}
+                                                        <td className="py-3.5 px-4 text-right">
+                                                            <div className="flex items-center justify-end gap-1.5">
                                                                 <button
-                                                                    disabled={isThisToggling}
-                                                                    onClick={() => handleToggleStatus(item)}
-                                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${isAvailable
-                                                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-                                                                        : 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
-                                                                        }`}
-                                                                    title="Click to toggle availability"
+                                                                    onClick={() => handleOpenModal(item)}
+                                                                    className="p-2 text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all cursor-pointer"
+                                                                    title="Edit Menu Item"
                                                                 >
-                                                                    {isThisToggling ? (
-                                                                        <>
-                                                                            <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
-                                                                            Updating...
-                                                                        </>
-                                                                    ) : isAvailable ? (
-                                                                        <>
-                                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                                                            Available
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                                                                            Archived / Out
-                                                                        </>
-                                                                    )}
+                                                                    <Edit3 className="w-4 h-4" />
                                                                 </button>
-                                                            );
-                                                        })()}
-                                                    </td>
-
-                                                    {/* Action Buttons */}
-                                                    <td className="py-3.5 px-4 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            {/* Edit Button */}
-                                                            <button
-                                                                onClick={() => handleOpenModal(item)}
-                                                                className="p-2 text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all cursor-pointer"
-                                                                title="Edit Menu Item"
-                                                            >
-                                                                <Edit3 className="w-4 h-4" />
-                                                            </button>
-
-                                                            {/* Soft Delete / Archive */}
-                                                            <button
-                                                                onClick={() => handleDelete(item, false)}
-                                                                className="p-2 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
-                                                                title="Soft Delete (Archive safely)"
-                                                            >
-                                                                <Archive className="w-4 h-4" />
-                                                            </button>
-
-                                                            {/* Permanent Delete */}
-                                                            <button
-                                                                onClick={() => handleDelete(item, true)}
-                                                                className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
-                                                                title="Permanent Hard Delete"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                                <button
+                                                                    onClick={() => handleDelete(item, false)}
+                                                                    className="p-2 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
+                                                                    title="Archive / Soft Delete"
+                                                                >
+                                                                    <Archive className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(item, true)}
+                                                                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+                                                                    title="Permanent Hard Delete"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>
@@ -857,57 +1082,170 @@ const Admin = () => {
             {/* ORDERS MANAGEMENT TAB */}
             {activeTab === 'orders' && (
                 <div className="mt-6 space-y-6">
-                    {/* Orders KPI Stats Bar */}
+                    {/* Orders KPI Stats Bar (Organized into Today, Month-End, Kitchen, Delivery, and Lifetime) */}
                     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
-                        <div className="bg-[#121214] border border-white/5 rounded-2xl p-4 shadow-sm hover:border-amber-500/20 transition-all">
+                        {/* Today's Sales Card */}
+                        <div
+                            onClick={() => setOrderPeriod('today')}
+                            className={`bg-[#121214] border rounded-2xl p-4 shadow-sm transition-all cursor-pointer ${
+                                orderPeriod === 'today'
+                                    ? 'border-amber-500 bg-amber-500/[0.03] shadow-amber-500/10'
+                                    : 'border-white/5 hover:border-amber-500/30'
+                            }`}
+                        >
                             <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
-                                <span>Total Orders</span>
-                                <ShoppingBag className="w-4 h-4 text-amber-400" />
+                                <span className="text-amber-400 font-bold">Today's Sales</span>
+                                <Calendar className="w-4 h-4 text-amber-400" />
                             </div>
-                            <p className="text-2xl font-bold text-white mt-1.5">{orderMetrics.total}</p>
-                            <span className="text-[11px] text-gray-500">Lifetime orders placed</span>
+                            <p className="text-2xl font-black text-amber-400 mt-1.5">
+                                ₹{orderMetrics.todayRevenue.toLocaleString()}
+                            </p>
+                            <span className="text-[11px] text-gray-400 block mt-0.5">
+                                {orderMetrics.todayOrdersCount} today's orders {orderMetrics.todayCancelledCount > 0 ? `(${orderMetrics.todayCancelledCount} cancelled)` : ''}
+                            </span>
                         </div>
 
+                        {/* This Month's Sales Card */}
+                        <div
+                            onClick={() => setOrderPeriod('month')}
+                            className={`bg-[#121214] border rounded-2xl p-4 shadow-sm transition-all cursor-pointer ${
+                                orderPeriod === 'month'
+                                    ? 'border-emerald-500 bg-emerald-500/[0.03] shadow-emerald-500/10'
+                                    : 'border-white/5 hover:border-emerald-500/30'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
+                                <span className="text-emerald-400 font-bold">This Month's Sales</span>
+                                <DollarSign className="w-4 h-4 text-emerald-400" />
+                            </div>
+                            <p className="text-2xl font-black text-emerald-400 mt-1.5">
+                                ₹{orderMetrics.monthRevenue.toLocaleString()}
+                            </p>
+                            <span className="text-[11px] text-gray-400 block mt-0.5">
+                                {orderMetrics.monthOrdersCount} monthly orders (ledger)
+                            </span>
+                        </div>
+
+                        {/* In Kitchen / Active */}
                         <div className="bg-[#121214] border border-white/5 rounded-2xl p-4 shadow-sm hover:border-sky-500/20 transition-all">
                             <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
                                 <span>In Kitchen / Active</span>
                                 <ChefHat className="w-4 h-4 text-sky-400" />
                             </div>
                             <p className="text-2xl font-bold text-sky-400 mt-1.5">{orderMetrics.activeCount}</p>
-                            <span className="text-[11px] text-gray-500">Pending & preparing</span>
+                            <span className="text-[11px] text-gray-500 block mt-0.5">
+                                {orderMetrics.pending} pending • {orderMetrics.preparing} cooking
+                            </span>
                         </div>
 
+                        {/* Out for Delivery */}
                         <div className="bg-[#121214] border border-white/5 rounded-2xl p-4 shadow-sm hover:border-purple-500/20 transition-all">
                             <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
                                 <span>Out for Delivery</span>
                                 <Truck className="w-4 h-4 text-purple-400" />
                             </div>
                             <p className="text-2xl font-bold text-purple-400 mt-1.5">{orderMetrics.outForDelivery}</p>
-                            <span className="text-[11px] text-gray-500">Riders on the road</span>
+                            <span className="text-[11px] text-gray-500 block mt-0.5">Riders on the road</span>
                         </div>
 
-                        <div className="bg-[#121214] border border-white/5 rounded-2xl p-4 shadow-sm hover:border-emerald-500/20 transition-all">
+                        {/* Total Lifetime Revenue Card */}
+                        <div
+                            onClick={() => setOrderPeriod('all')}
+                            className={`bg-[#121214] border rounded-2xl p-4 shadow-sm col-span-2 lg:col-span-1 transition-all cursor-pointer ${
+                                orderPeriod === 'all'
+                                    ? 'border-amber-500/50 bg-amber-500/[0.02]'
+                                    : 'border-white/5 hover:border-amber-500/20'
+                            }`}
+                        >
                             <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
-                                <span>Delivered</span>
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                            </div>
-                            <p className="text-2xl font-bold text-emerald-400 mt-1.5">{orderMetrics.delivered}</p>
-                            <span className="text-[11px] text-gray-500">Completed orders</span>
-                        </div>
-
-                        <div className="bg-[#121214] border border-white/5 rounded-2xl p-4 shadow-sm col-span-2 lg:col-span-1 hover:border-amber-500/20 transition-all">
-                            <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
-                                <span>Total Revenue</span>
+                                <span>Lifetime Net Revenue</span>
                                 <DollarSign className="w-4 h-4 text-amber-400" />
                             </div>
-                            <p className="text-2xl font-bold text-amber-400 mt-1.5">₹{orderMetrics.totalRevenue.toLocaleString()}</p>
-                            <span className="text-[11px] text-gray-500">Avg ₹{orderMetrics.avgOrderValue} / order</span>
+                            <p className="text-2xl font-bold text-white mt-1.5">₹{orderMetrics.totalRevenue.toLocaleString()}</p>
+                            <span className="text-[11px] text-gray-500 block mt-0.5">
+                                {orderMetrics.total - orderMetrics.cancelled} fulfilled • Avg ₹{orderMetrics.avgOrderValue}
+                            </span>
                         </div>
                     </div>
 
+                    {/* Accounting Rule Compliance Strip */}
+                    <div className="px-4 py-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2 text-amber-300">
+                            <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                            <span>
+                                <strong>Strict Accounting Rule:</strong> All orders cancelled by customer or restaurant (₹{orderMetrics.cancelledRevenue.toLocaleString()}) are strictly excluded from all sales and revenue totals.
+                            </span>
+                        </div>
+                        <span className="text-gray-400 text-[11px] shrink-0 font-medium">
+                            {orderMetrics.cancelled} Cancelled Orders Excluded
+                        </span>
+                    </div>
+
                     {/* Filter, Search & Status Tabs Bar */}
-                    <div className="bg-[#121214] border border-white/5 p-4 rounded-2xl space-y-4">
-                        {/* Status Filter Tabs */}
+                    <div className="bg-[#121214] border border-white/5 p-4 rounded-2xl space-y-4 shadow-sm">
+                        {/* Row 1: Order Period Filter & Future Admin Tools */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+                            {/* Date Period Switcher */}
+                            <div className="flex items-center gap-1.5 p-1 bg-[#18181b] border border-white/10 rounded-xl overflow-x-auto">
+                                <button
+                                    onClick={() => setOrderPeriod('all')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                                        orderPeriod === 'all'
+                                            ? 'bg-amber-500 text-black font-bold shadow-md'
+                                            : 'text-gray-400 hover:text-white'
+                                    }`}
+                                >
+                                    All Time ({orderMetrics.total})
+                                </button>
+
+                                <button
+                                    onClick={() => setOrderPeriod('today')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                                        orderPeriod === 'today'
+                                            ? 'bg-amber-500 text-black font-bold shadow-md'
+                                            : 'text-gray-400 hover:text-white'
+                                    }`}
+                                >
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    <span>Today's Orders ({orderMetrics.todayOrdersCount})</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setOrderPeriod('month')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                                        orderPeriod === 'month'
+                                            ? 'bg-amber-500 text-black font-bold shadow-md'
+                                            : 'text-gray-400 hover:text-white'
+                                    }`}
+                                >
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    <span>This Month ({orderMetrics.monthOrdersCount})</span>
+                                </button>
+                            </div>
+
+                            {/* Additional Tools with Under Development notification */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setUnderDevFeature("Financial Report Export (CSV/Excel)")}
+                                    className="px-3 py-1.5 bg-[#18181b] hover:bg-white/5 border border-white/10 text-gray-300 hover:text-white rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5"
+                                    title="Export sales reports for accounting"
+                                >
+                                    <Archive className="w-3.5 h-3.5 text-amber-400" />
+                                    <span className="hidden md:inline">Export Ledger</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setUnderDevFeature("Delivery Partner Dispatch & Fleet Management")}
+                                    className="px-3 py-1.5 bg-[#18181b] hover:bg-white/5 border border-white/10 text-gray-300 hover:text-white rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5"
+                                    title="Dispatch orders to delivery partners"
+                                >
+                                    <Truck className="w-3.5 h-3.5 text-purple-400" />
+                                    <span className="hidden md:inline">Partner Fleet</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Row 2: Status Filter Tabs */}
                         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                             {ORDER_STATUS_TABS.map((tab) => {
                                 const count = tab.id === 'all'
@@ -941,6 +1279,27 @@ const Admin = () => {
                                 );
                             })}
                         </div>
+
+                        {/* Period Active Banner if filtered */}
+                        {orderPeriod !== 'all' && (
+                            <div className="px-3.5 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                    <span className="text-gray-200">
+                                        {orderPeriod === 'today'
+                                            ? `Viewing Today's Orders (${orderMetrics.todayOrdersCount} orders • Total Sales: ₹${orderMetrics.todayRevenue.toLocaleString()})`
+                                            : `Viewing This Month's Orders (${orderMetrics.monthOrdersCount} orders • Total Monthly Sales: ₹${orderMetrics.monthRevenue.toLocaleString()})`
+                                        }
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setOrderPeriod('all')}
+                                    className="text-amber-400 hover:underline font-semibold cursor-pointer text-[11px]"
+                                >
+                                    Show All Time
+                                </button>
+                            </div>
+                        )}
 
                         {/* Search, Sort and Refresh controls */}
                         <div className="flex flex-col md:flex-row gap-3 items-center justify-between pt-1 border-t border-white/5">
@@ -1631,6 +1990,32 @@ const Admin = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* UNDER DEVELOPMENT NOTIFICATION MODAL */}
+            {underDevFeature && (
+                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-[#141417] border border-amber-500/30 rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+                            <AlertCircle className="w-7 h-7" />
+                        </div>
+                        <div className="space-y-2">
+                            <span className="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                                Feature In Progress
+                            </span>
+                            <h3 className="text-lg font-extrabold text-white">{underDevFeature}</h3>
+                            <p className="text-xs text-gray-400 leading-relaxed px-2">
+                                This module is currently under active development and will be released in an upcoming update. All core restaurant functions—live order dispatch, customer receipts & KOT printing, and menu catalogue management—are fully operational.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setUnderDevFeature(null)}
+                            className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold rounded-xl text-xs shadow-lg shadow-amber-500/10 transition-all cursor-pointer"
+                        >
+                            Got It
+                        </button>
                     </div>
                 </div>
             )}
