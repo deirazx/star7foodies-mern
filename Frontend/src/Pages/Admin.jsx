@@ -1642,29 +1642,36 @@ const Admin = () => {
 
             {/* KITCHEN ORDER TICKET (KOT) / INVOICE MODAL */}
             {activeKOTOrder && (
-                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-[#141417] border border-white/15 rounded-3xl w-full max-w-lg p-6 md:p-8 shadow-2xl relative text-gray-100">
+                <div
+                    className="fixed inset-0 z-[2000] bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-hidden"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setActiveKOTOrder(null);
+                        }
+                    }}
+                >
+                    <div className="bg-[#141417] border border-white/15 rounded-2xl sm:rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl relative text-gray-100 overflow-hidden animate-fadeIn">
                         {/* Header */}
-                        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 shrink-0 bg-[#141417]">
                             <div className="flex items-center gap-2">
                                 <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
                                     <Utensils className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-extrabold text-white text-lg tracking-tight">Star7Foodies Receipt</h3>
+                                    <h3 className="font-extrabold text-white text-base sm:text-lg tracking-tight">Star7Foodies Receipt</h3>
                                     <p className="text-[11px] text-gray-400">Kitchen Order Ticket & Customer Invoice</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setActiveKOTOrder(null)}
-                                className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 cursor-pointer"
+                                className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {/* Printable Receipt Body */}
-                        <div id="kot-receipt-content" className="mt-5 space-y-4 text-xs">
+                        <div id="kot-receipt-content" className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
                             {/* Receipt Meta */}
                             <div className="bg-[#18181c] p-3.5 rounded-xl border border-white/5 grid grid-cols-2 gap-3 text-xs">
                                 <div>
@@ -1759,7 +1766,7 @@ const Admin = () => {
                         </div>
 
                         {/* Modal Action Buttons */}
-                        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+                        <div className="flex items-center justify-end gap-3 p-4 sm:p-6 border-t border-white/10 bg-[#161619] shrink-0">
                             <button
                                 onClick={() => setActiveKOTOrder(null)}
                                 className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
@@ -1780,204 +1787,263 @@ const Admin = () => {
 
             {/* CREATE / EDIT MODAL */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-[#141417] border border-white/10 rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative">
+                <div
+                    className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget && !submitting) {
+                            handleCloseModal();
+                        }
+                    }}
+                >
+                    <div className="bg-[#141417] border border-white/10 rounded-2xl sm:rounded-3xl w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl relative overflow-hidden animate-fadeIn">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                            <div>
-                                <h3 className="text-xl font-bold text-white">
-                                    {editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}
-                                </h3>
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                    {editingItem ? 'Update menu details and stock status' : 'Fill in the details to publish a new dish'}
-                                </p>
+                        <div className="flex items-center justify-between px-5 py-4 sm:px-6 sm:py-5 border-b border-white/10 bg-[#141417] shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                                    <Utensils className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base sm:text-lg font-bold text-white leading-tight">
+                                        {editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}
+                                    </h3>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        {editingItem ? 'Update dish details, prices & stock' : 'Publish a new dish to your live restaurant menu'}
+                                    </p>
+                                </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={handleCloseModal}
-                                className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 cursor-pointer"
+                                className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+                                title="Close"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        {/* Error Alert inside Modal */}
-                        {formError && (
-                            <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-xl text-xs flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                                <span>{formError}</span>
-                            </div>
-                        )}
-
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                            {/* Item Name */}
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                    Dish / Item Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    placeholder="e.g. Royal Chicken Biryani"
-                                    required
-                                    className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                                />
-                            </div>
+                        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                            {/* Scrollable Form Body */}
+                            <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5 space-y-4">
+                                {/* Error Alert inside Modal */}
+                                {formError && (
+                                    <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-xl text-xs flex items-center gap-2">
+                                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                                        <span>{formError}</span>
+                                    </div>
+                                )}
 
-                            {/* Category & Price */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Item Name */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                        Category *
-                                    </label>
-                                    <select
-                                        name="category"
-                                        value={formData.category}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer"
-                                    >
-                                        {CATEGORIES.filter(c => c !== 'All').map(c => (
-                                            <option key={c} value={c}>{c}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                        Price (₹) *
+                                        Dish / Item Name <span className="text-amber-400">*</span>
                                     </label>
                                     <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        name="price"
-                                        value={formData.price}
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
                                         onChange={handleInputChange}
-                                        placeholder="e.g. 249"
+                                        placeholder="e.g. Royal Chicken Biryani"
                                         required
-                                        className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
                                     />
                                 </div>
-                            </div>
 
-                            {/* Description */}
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                    Description *
-                                </label>
-                                <textarea
-                                    name="description"
-                                    rows="3"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    placeholder="Rich basmati rice layered with aromatic saffron spices and tender pieces..."
-                                    required
-                                    className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 resize-none"
-                                />
-                            </div>
-
-                            {/* Image Upload or URL */}
-                            <div className="space-y-2">
-                                <label className="block text-xs font-semibold text-gray-300">
-                                    Dish Image *
-                                </label>
-                                <div className="flex items-center gap-4">
-                                    {previewUrl && (
-                                        <img
-                                            src={previewUrl}
-                                            alt="Preview"
-                                            className="w-16 h-16 rounded-xl object-cover border border-white/10 shrink-0"
-                                        />
-                                    )}
-                                    <div className="flex-1 space-y-2">
-                                        <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 hover:border-amber-500/50 rounded-xl p-3 cursor-pointer text-xs text-gray-400 hover:text-white transition-all bg-white/[0.01]">
-                                            <UploadCloud className="w-4 h-4 text-amber-400" />
-                                            <span>Upload image file (Cloudinary)</span>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleFileChange}
-                                                className="hidden"
-                                            />
+                                {/* Category & Price */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                                            Category <span className="text-amber-400">*</span>
                                         </label>
-                                        <input
-                                            type="text"
-                                            name="image_url"
-                                            value={formData.image_url}
-                                            onChange={(e) => {
-                                                handleInputChange(e);
-                                                if (!imageFile) setPreviewUrl(e.target.value);
-                                            }}
-                                            placeholder="Or enter direct Image URL (e.g. https://...)"
-                                            className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
-                                        />
+                                        <div className="relative">
+                                            <select
+                                                name="category"
+                                                value={formData.category}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer appearance-none pr-9"
+                                            >
+                                                {CATEGORIES.filter(c => c !== 'All').map(c => (
+                                                    <option key={c} value={c} className="bg-[#1c1c20] text-white">{c}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                                            Base Price (₹) <span className="text-amber-400">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₹</span>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                name="price"
+                                                value={formData.price}
+                                                onChange={handleInputChange}
+                                                placeholder="249"
+                                                required
+                                                className="w-full bg-[#1c1c20] border border-white/10 rounded-xl pl-8 pr-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Portion Prices (Optional) */}
-                            <div className="grid grid-cols-2 gap-4">
+                                {/* Description */}
                                 <div>
-                                    <label className="block text-[11px] font-medium text-gray-400 mb-1">
-                                        Half Portion Price (₹, optional)
+                                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                                        Description <span className="text-amber-400">*</span>
                                     </label>
-                                    <input
-                                        type="number"
-                                        name="halfPortion"
-                                        value={formData.halfPortion}
+                                    <textarea
+                                        name="description"
+                                        rows="2"
+                                        value={formData.description}
                                         onChange={handleInputChange}
-                                        placeholder="Optional"
-                                        className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                                        placeholder="Rich basmati rice layered with aromatic saffron spices and tender pieces..."
+                                        required
+                                        className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 resize-none transition-colors"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-[11px] font-medium text-gray-400 mb-1">
-                                        Full Portion Price (₹, optional)
+
+                                {/* Image Upload or URL */}
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-semibold text-gray-300">
+                                        Dish Image <span className="text-amber-400">*</span>
                                     </label>
-                                    <input
-                                        type="number"
-                                        name="fullPortion"
-                                        value={formData.fullPortion}
-                                        onChange={handleInputChange}
-                                        placeholder="Optional"
-                                        className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                                    />
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                        {previewUrl ? (
+                                            <div className="relative group shrink-0">
+                                                <img
+                                                    src={previewUrl}
+                                                    alt="Preview"
+                                                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-white/10 bg-[#1c1c20]"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&q=80";
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImageFile(null);
+                                                        setPreviewUrl('');
+                                                        setFormData(prev => ({ ...prev, image_url: '' }));
+                                                    }}
+                                                    className="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1 shadow-md transition-colors"
+                                                    title="Remove image"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-dashed border-white/20 bg-white/[0.02] flex flex-col items-center justify-center text-gray-500 shrink-0">
+                                                <UploadCloud className="w-5 h-5 text-gray-400 mb-1" />
+                                                <span className="text-[9px]">No image</span>
+                                            </div>
+                                        )}
+                                        <div className="flex-1 w-full space-y-2">
+                                            <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 hover:border-amber-500/50 rounded-xl p-2.5 cursor-pointer text-xs text-gray-300 hover:text-white transition-all bg-white/[0.02] hover:bg-amber-500/[0.03]">
+                                                <UploadCloud className="w-4 h-4 text-amber-400 shrink-0" />
+                                                <span className="truncate">{imageFile ? imageFile.name : 'Upload from device (Cloudinary)'}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleFileChange}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="image_url"
+                                                value={formData.image_url}
+                                                onChange={(e) => {
+                                                    handleInputChange(e);
+                                                    if (!imageFile) setPreviewUrl(e.target.value);
+                                                }}
+                                                placeholder="Or paste direct image URL (https://...)"
+                                                className="w-full bg-[#1c1c20] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Portion Prices (Optional) */}
+                                <div className="bg-[#1c1c20]/60 border border-white/5 p-3 rounded-xl space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-gray-300">Portion Pricing (Optional)</span>
+                                        <span className="text-[10px] text-gray-500">Leave blank if standard dish</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-[11px] font-medium text-gray-400 mb-1">
+                                                Half Portion (₹)
+                                            </label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">₹</span>
+                                                <input
+                                                    type="number"
+                                                    name="halfPortion"
+                                                    value={formData.halfPortion}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Optional"
+                                                    className="w-full bg-[#161619] border border-white/10 rounded-lg pl-7 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-medium text-gray-400 mb-1">
+                                                Full Portion (₹)
+                                            </label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">₹</span>
+                                                <input
+                                                    type="number"
+                                                    name="fullPortion"
+                                                    value={formData.fullPortion}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Optional"
+                                                    className="w-full bg-[#161619] border border-white/10 rounded-lg pl-7 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Stock Availability Toggle */}
+                                <div className="flex items-center justify-between bg-[#1c1c20] border border-white/5 p-3 sm:p-3.5 rounded-xl">
+                                    <div className="pr-2">
+                                        <p className="text-xs font-semibold text-white">Item Availability (In Stock)</p>
+                                        <p className="text-[11px] text-gray-400">Controls whether customers can order this dish right now</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            name="is_available"
+                                            checked={formData.is_available}
+                                            onChange={handleInputChange}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                                    </label>
                                 </div>
                             </div>
 
-                            {/* Stock Availability Toggle */}
-                            <div className="flex items-center justify-between bg-[#1c1c20] border border-white/5 p-3 rounded-xl">
-                                <div>
-                                    <p className="text-xs font-semibold text-white">Item Availability (In Stock)</p>
-                                    <p className="text-[11px] text-gray-400">Controls whether customers can order this dish right now</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="is_available"
-                                        checked={formData.is_available}
-                                        onChange={handleInputChange}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-                                </label>
-                            </div>
-
-                            {/* Modal Actions */}
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                            {/* Sticky Modal Actions Footer */}
+                            <div className="flex items-center justify-end gap-3 px-5 py-3.5 sm:px-6 sm:py-4 border-t border-white/10 bg-[#161619] shrink-0">
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
-                                    className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                                    disabled={submitting}
+                                    className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold rounded-xl text-sm shadow-lg shadow-amber-500/10 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                                    className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-500/10 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                                 >
                                     {submitting ? (
                                         <>
@@ -1996,8 +2062,15 @@ const Admin = () => {
 
             {/* UNDER DEVELOPMENT NOTIFICATION MODAL */}
             {underDevFeature && (
-                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-[#141417] border border-amber-500/30 rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
+                <div
+                    className="fixed inset-0 z-[2000] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setUnderDevFeature(null);
+                        }
+                    }}
+                >
+                    <div className="bg-[#141417] border border-amber-500/30 rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl animate-fadeIn">
                         <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-inner">
                             <AlertCircle className="w-7 h-7" />
                         </div>
