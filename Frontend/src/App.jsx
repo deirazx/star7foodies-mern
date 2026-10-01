@@ -1,5 +1,6 @@
 import Navbar from './Components/Navbar';
 import BottomNavbar from './Components/BottomNavbar';
+import FloatingCart from './Components/FloatingCart';
 import Home from './Pages/Home';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
@@ -37,6 +38,9 @@ const App = () => {
                 <p className="font-semibold text-gray-400">Star7Foodies</p>
                 <p className="mt-1">© 2026. Made with ❤️ for Star7Foodies - Swiggy & Blinkit Inspired UI.</p>
             </footer>
+
+            {/* Global Blinkit/Zepto-style Floating Cart */}
+            <FloatingCart />
 
             {/* Mobile Bottom Navigation */}
             <BottomNavbar />

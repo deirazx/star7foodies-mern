@@ -715,44 +715,6 @@ const Menu = () => {
                     </div>
                 </div>
             </div>
-
-            {/* STICKY BOTTOM CART BAR (Themed with Star7Foodies Brand Colors) */}
-            {totalCartCount > 0 && (
-                <div className="fixed bottom-16 md:bottom-6 left-0 right-0 z-50 px-4 max-w-xl mx-auto animate-slide-up pointer-events-auto">
-                    <Link
-                        to="/cart"
-                        className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-black p-3.5 rounded-2xl shadow-2xl shadow-orange-950/60 flex items-center justify-between border border-amber-400/40 transition-all transform hover:scale-[1.02] cursor-pointer group"
-                    >
-                        {/* Left Info: Cart Icon, Items count & Price */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-black/15 flex items-center justify-center shrink-0 border border-black/10">
-                                <ShoppingBag className="w-5 h-5 text-black" />
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-black tracking-wide text-black">
-                                        {totalCartCount} {totalCartCount === 1 ? 'ITEM' : 'ITEMS'}
-                                    </span>
-                                    <span className="text-black/40">•</span>
-                                    <span className="text-base font-black text-black">
-                                        ₹{totalCartAmount}
-                                    </span>
-                                </div>
-                                <p className="text-[11px] text-black/80 flex items-center gap-1 font-semibold">
-                                    <Zap className="w-3 h-3 fill-black text-black" />
-                                    Instant delivery to your table or doorstep
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Right Action: View Cart Button */}
-                        <div className="flex items-center gap-1.5 bg-black hover:bg-black/90 text-amber-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md">
-                            <span>View Cart</span>
-                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                    </Link>
-                </div>
-            )}
         </div>
     );
 };
