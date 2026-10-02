@@ -118,13 +118,12 @@ function Navbar() {
                                     <Link
                                         key={item.name}
                                         to={item.path}
-                                        className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${
-                                            isActive
+                                        className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${isActive
                                                 ? 'text-amber-400 bg-amber-500/10 border border-amber-500/20'
                                                 : item.isSpecial
                                                     ? 'text-orange-400 hover:text-white hover:bg-orange-500/10'
                                                     : 'text-gray-300 hover:text-white hover:bg-white/5'
-                                        }`}
+                                            }`}
                                     >
                                         {item.isSpecial && <FaShieldAlt className="text-xs text-amber-500" />}
                                         <span>{item.name}</span>
@@ -153,7 +152,7 @@ function Navbar() {
 
                             {/* Quick Call Button (Village friendly) */}
                             <a
-                                href="tel:+919876543210"
+                                href="tel:+917562926866"
                                 title="Call Restaurant Directly"
                                 className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all"
                             >
@@ -451,11 +450,11 @@ function Navbar() {
                     {/* Quick Call Us for Village Users */}
                     <div className="pt-2 border-t border-white/5">
                         <a
-                            href="tel:+919876543210"
+                            href="tel:+917562926866"
                             className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold transition-all"
                         >
                             <FaPhoneAlt className="text-xs" />
-                            <span>Call Restaurant Directly (+91 98765 43210)</span>
+                            <span>Call Restaurant Directly (+91 75629 26866)</span>
                         </a>
                     </div>
 

@@ -497,7 +497,7 @@ const Profile = () => {
                             </div>
                             <div className="flex gap-2 pt-1">
                                 <a
-                                    href="tel:+919876543210"
+                                    href="tel:+917562926866"
                                     className="flex-1 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-xl text-center transition-all flex items-center justify-center gap-1.5"
                                 >
                                     <FaPhoneAlt className="text-[10px]" />

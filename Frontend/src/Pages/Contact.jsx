@@ -19,15 +19,15 @@ import {
  */
 export const RESTAURANT_CONTACT_DATA = {
     restaurantName: "Star7Foodies Restaurant",
-    phoneDisplay: "+91 98765 43210",       // <-- EDIT: Display Phone Number
-    phoneTel: "+919876543210",             // <-- EDIT: Dialable Phone Link
-    whatsappNumber: "919876543210",        // <-- EDIT: 10-12 digit WhatsApp number (no spaces or '+')
+    phoneDisplay: "+91 7562926866",       // <-- EDIT: Display Phone Number
+    phoneTel: "+917562926866",             // <-- EDIT: Dialable Phone Link
+    whatsappNumber: "7562926866",        // <-- EDIT: 10-12 digit WhatsApp number (no spaces or '+')
     email: "contact@star7foodies.com",     // <-- EDIT: Your Email Address
-    addressLine1: "Star7Foodies Restaurant, Main Road", // <-- EDIT: Village/Road
-    addressLine2: "Near Central Chowk, Muzaffarpur",     // <-- EDIT: Area / Landmark
-    statePin: "Bihar - 842001",            // <-- EDIT: State and PIN Code
-    kitchenHours: "10:00 AM – 11:00 PM",   // <-- EDIT: Operating Hours
-    deliveryHours: "Fast Delivery till 10:30 PM",
+    addressLine1: "Star7Foodies Restaurant, Manik Chowk Chhotka Bajar, Sitamarhi, Bihar", // <-- EDIT: Village/Road
+    addressLine2: "Near Amit Telecom",     // <-- EDIT: Area / Landmark
+    statePin: "Bihar - 843323",            // <-- EDIT: State and PIN Code
+    kitchenHours: "11:00 AM – 11:30 PM",   // <-- EDIT: Operating Hours
+    deliveryHours: "Fast Delivery till 11:30 PM",
 };
 
 const Contact = () => {
@@ -175,7 +175,7 @@ const Contact = () => {
                                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
                                                 {card.title}
                                             </h4>
-                                            <p className="text-sm sm:text-base font-extrabold text-white mt-0.5 truncate">
+                                            <p className="text-sm sm:text-base font-extrabold text-white mt-0.5">
                                                 {card.primary}
                                             </p>
                                             <p className="text-[11px] text-gray-400 mt-0.5">
@@ -240,9 +240,8 @@ const Contact = () => {
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         placeholder="e.g. Ramesh Kumar"
-                                        className={`w-full px-3.5 py-2.5 bg-white/5 border rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-all ${
-                                            formErrors.name ? 'border-rose-500' : 'border-white/10'
-                                        }`}
+                                        className={`w-full px-3.5 py-2.5 bg-white/5 border rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-all ${formErrors.name ? 'border-rose-500' : 'border-white/10'
+                                            }`}
                                     />
                                     {formErrors.name && (
                                         <p className="text-[10px] text-rose-400 mt-1 flex items-center gap-1">
@@ -265,9 +264,8 @@ const Contact = () => {
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             placeholder="9876543210"
-                                            className={`w-full pl-11 pr-3.5 py-2.5 bg-white/5 border rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-all ${
-                                                formErrors.phone ? 'border-rose-500' : 'border-white/10'
-                                            }`}
+                                            className={`w-full pl-11 pr-3.5 py-2.5 bg-white/5 border rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-all ${formErrors.phone ? 'border-rose-500' : 'border-white/10'
+                                                }`}
                                         />
                                     </div>
                                     {formErrors.phone && (
@@ -307,9 +305,8 @@ const Contact = () => {
                                     value={formData.message}
                                     onChange={handleInputChange}
                                     placeholder="Type your message, query or order request here..."
-                                    className={`w-full p-3.5 bg-white/5 border rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-all resize-none ${
-                                        formErrors.message ? 'border-rose-500' : 'border-white/10'
-                                    }`}
+                                    className={`w-full p-3.5 bg-white/5 border rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-all resize-none ${formErrors.message ? 'border-rose-500' : 'border-white/10'
+                                        }`}
                                 />
                                 {formErrors.message && (
                                     <p className="text-[10px] text-rose-400 mt-1 flex items-center gap-1">

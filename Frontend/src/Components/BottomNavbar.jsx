@@ -85,26 +85,23 @@ const BottomNavbar = () => {
                                 <button
                                     key={item.name}
                                     onClick={item.onClick}
-                                    className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all duration-200 cursor-pointer ${
-                                        isActive ? 'text-amber-400' : 'text-gray-400 hover:text-gray-200'
-                                    }`}
+                                    className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all duration-200 cursor-pointer ${isActive ? 'text-amber-400' : 'text-gray-400 hover:text-gray-200'
+                                        }`}
                                 >
                                     {isActive && (
                                         <span className="absolute -top-1.5 w-6 h-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full shadow-[0_0_12px_#f59e0b]"></span>
                                     )}
                                     <div className="relative p-1">
                                         <Icon
-                                            className={`text-lg transition-transform duration-200 ${
-                                                isActive
+                                            className={`text-lg transition-transform duration-200 ${isActive
                                                     ? 'scale-115 text-amber-400 filter drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]'
                                                     : 'text-gray-400'
-                                            }`}
+                                                }`}
                                         />
                                     </div>
                                     <span
-                                        className={`text-[10px] font-bold tracking-tight transition-colors duration-200 ${
-                                            isActive ? 'text-amber-400 font-extrabold' : 'text-gray-400'
-                                        }`}
+                                        className={`text-[10px] font-bold tracking-tight transition-colors duration-200 ${isActive ? 'text-amber-400 font-extrabold' : 'text-gray-400'
+                                            }`}
                                     >
                                         {item.name}
                                     </span>
@@ -116,9 +113,8 @@ const BottomNavbar = () => {
                             <Link
                                 key={item.name}
                                 to={item.path}
-                                className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all duration-200 cursor-pointer ${
-                                    isActive ? 'text-amber-400' : 'text-gray-400 hover:text-gray-200'
-                                }`}
+                                className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all duration-200 cursor-pointer ${isActive ? 'text-amber-400' : 'text-gray-400 hover:text-gray-200'
+                                    }`}
                             >
                                 {isActive && (
                                     <span className="absolute -top-1.5 w-6 h-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full shadow-[0_0_12px_#f59e0b]"></span>
@@ -126,11 +122,10 @@ const BottomNavbar = () => {
 
                                 <div className="relative p-1">
                                     <Icon
-                                        className={`text-lg transition-transform duration-200 ${
-                                            isActive
+                                        className={`text-lg transition-transform duration-200 ${isActive
                                                 ? 'scale-115 text-amber-400 filter drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]'
                                                 : 'text-gray-400'
-                                        }`}
+                                            }`}
                                     />
                                     {item.badge > 0 && (
                                         <span className="absolute -top-1 -right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black text-[9px] font-black min-w-[17px] h-[17px] px-1 flex items-center justify-center rounded-full border-2 border-[#0c0c0e] shadow-md animate-pulse">
@@ -140,9 +135,8 @@ const BottomNavbar = () => {
                                 </div>
 
                                 <span
-                                    className={`text-[10px] font-bold tracking-tight transition-colors duration-200 ${
-                                        isActive ? 'text-amber-400 font-extrabold' : 'text-gray-400'
-                                    }`}
+                                    className={`text-[10px] font-bold tracking-tight transition-colors duration-200 ${isActive ? 'text-amber-400 font-extrabold' : 'text-gray-400'
+                                        }`}
                                 >
                                     {item.name}
                                 </span>
@@ -274,11 +268,11 @@ const BottomNavbar = () => {
                         {/* Village Friendly Help Call */}
                         <div className="pt-2 border-t border-white/8">
                             <a
-                                href="tel:+919876543210"
+                                href="tel:+917562926866"
                                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all"
                             >
                                 <FaPhoneAlt className="text-xs" />
-                                <span>Call Village Kitchen (+91 98765 43210)</span>
+                                <span>Call Village Kitchen (+91 75629 26866)</span>
                             </a>
                         </div>
 
