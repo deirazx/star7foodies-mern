@@ -263,10 +263,10 @@ const Home = () => {
                             </span>
                         </div>
                         <h2 className="text-xl md:text-2xl font-black leading-tight text-white">
-                            50% OFF ON YOUR FIRST ORDER
+                            10% OFF ON FIRST ORDER ABOVE ₹299
                         </h2>
                         <div className="flex items-center justify-between gap-4 mt-1">
-                            <p className="text-xs text-white/90">Use Code: <span className="font-bold border-b border-dashed border-white">STAR7WELCOME</span></p>
+                            <p className="text-xs text-white/90">Use Code: <span className="font-bold border-b border-dashed border-white">STAR7WELCOME</span> (Min ₹299)</p>
                             <button 
                                 onClick={(e) => { e.stopPropagation(); navigate('/menu'); }}
                                 className="flex items-center gap-1.5 bg-black text-white hover:bg-white hover:text-black transition-all px-4 py-1.5 rounded-full text-xs font-bold shadow-md cursor-pointer shrink-0"

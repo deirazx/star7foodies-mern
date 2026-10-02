@@ -130,12 +130,10 @@ const Cart = () => {
                                                     {isHalf ? (
                                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-amber-500/15 border border-amber-500/40 text-amber-400 shadow-sm">
                                                             <span>Half Plate</span>
-                                                            <span className="text-[10px] text-amber-300/80 font-normal">• आधा प्लेट</span>
                                                         </span>
                                                     ) : isFull ? (
                                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-orange-500/15 border border-orange-500/40 text-orange-400 shadow-sm">
                                                             <span>Full Plate</span>
-                                                            <span className="text-[10px] text-orange-300/80 font-normal">• पूरा प्लेट</span>
                                                         </span>
                                                     ) : (
                                                         <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 text-gray-300">

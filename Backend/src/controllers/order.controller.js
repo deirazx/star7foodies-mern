@@ -27,11 +27,17 @@ const createOrder = async (req, res) => {
             });
         }
 
-        // Strict Phone Validation
-        const cleanPhone = String(phone).trim().replace(/^(\+91|91|0)/, '').replace(/[\s-]/g, '');
-        if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+        // Strict Phone Validation (Safe for all Indian mobile numbers, including those starting with 91)
+        let cleanPhone = String(phone || '').replace(/\D/g, '');
+        if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
+            cleanPhone = cleanPhone.slice(2);
+        } else if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
+            cleanPhone = cleanPhone.slice(1);
+        }
+
+        if (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
             return res.status(400).json({
-                message: "Please provide a valid 10-digit Indian phone number (starting with 6, 7, 8, or 9)."
+                message: "Please provide a valid 10-digit Indian phone number starting with 6, 7, 8, or 9."
             });
         }
 

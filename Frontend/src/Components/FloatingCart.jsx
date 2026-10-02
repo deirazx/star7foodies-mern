@@ -45,8 +45,8 @@ const FloatingCart = () => {
         return null;
     }
 
-    const DELIVERY_FEE = totalCartAmount >= 199 ? 0 : 39;
-    const PLATFORM_FEE = 3;
+    const DELIVERY_FEE = totalCartAmount >= 299 ? 0 : 25;
+    const PLATFORM_FEE = 0;
     const grandTotal = totalCartAmount + DELIVERY_FEE + PLATFORM_FEE;
 
     return (
@@ -125,11 +125,11 @@ const FloatingCart = () => {
                                                     <span className="text-[10px] text-gray-400">₹{item.price} •</span>
                                                     {isHalf ? (
                                                         <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded">
-                                                            Half Plate • आधा
+                                                            Half Plate
                                                         </span>
                                                     ) : isFull ? (
                                                         <span className="text-[9px] font-black bg-orange-500/20 text-orange-300 border border-orange-500/30 px-1.5 py-0.2 rounded">
-                                                            Full Plate • पूरा
+                                                            Full Plate
                                                         </span>
                                                     ) : (
                                                         <span className="text-[10px] text-gray-400">{portionName}</span>
@@ -168,6 +168,28 @@ const FloatingCart = () => {
                                     </div>
                                 );
                             })}
+                        </div>
+
+                        {/* Free Delivery Incentive in Drawer */}
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 space-y-1.5 shrink-0">
+                            <div className="flex items-center justify-between text-xs">
+                                {totalCartAmount < 299 ? (
+                                    <span className="text-amber-300 font-bold">
+                                        Add ₹{299 - totalCartAmount} more for FREE Delivery 🛵
+                                    </span>
+                                ) : (
+                                    <span className="text-emerald-400 font-bold">
+                                        🎉 FREE Delivery Unlocked!
+                                    </span>
+                                )}
+                                <span className="text-[10px] text-gray-400">Order ₹299+</span>
+                            </div>
+                            <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                    className="bg-gradient-to-r from-amber-400 to-orange-500 h-full rounded-full transition-all duration-300"
+                                    style={{ width: `${Math.min(100, Math.round((totalCartAmount / 299) * 100))}%` }}
+                                />
+                            </div>
                         </div>
 
                         {/* Bill Breakdown Summary */}
@@ -240,9 +262,17 @@ const FloatingCart = () => {
                                         ₹{totalCartAmount}
                                     </span>
                                 </div>
-                                <p className="text-[10px] text-gray-400 truncate flex items-center gap-1">
-                                    <span>Tap to edit items</span>
-                                    <FaChevronUp className="text-[8px] text-amber-400 group-hover:-translate-y-0.5 transition-transform" />
+                                <p className="text-[10px] truncate flex items-center gap-1">
+                                    {totalCartAmount < 299 ? (
+                                        <span className="text-amber-300 font-semibold truncate">
+                                            Add ₹{299 - totalCartAmount} for FREE Delivery 🛵
+                                        </span>
+                                    ) : (
+                                        <span className="text-emerald-400 font-bold">
+                                            🎉 FREE Delivery Unlocked!
+                                        </span>
+                                    )}
+                                    <FaChevronUp className="text-[8px] text-amber-400 group-hover:-translate-y-0.5 transition-transform shrink-0" />
                                 </p>
                             </div>
                         </div>

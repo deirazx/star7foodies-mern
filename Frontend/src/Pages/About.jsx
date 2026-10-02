@@ -31,31 +31,31 @@ const RESTAURANT_INFO = {
 const About = () => {
     // Village & Town Realistic Milestones
     const stats = [
-        { label: 'Happy Customers (संतुष्ट ग्राहक)', value: '5,000+' },
-        { label: 'Fresh Dishes (स्वादिष्ट व्यंजन)', value: '50+' },
-        { label: 'Avg Delivery Time (तेज़ डिलीवरी)', value: '25-30m' },
-        { label: 'Pure & Hygienic (शुद्धता)', value: '100%' },
+        { label: 'Happy Customers', value: '5,000+' },
+        { label: 'Fresh Dishes', value: '50+' },
+        { label: 'Avg Delivery Time', value: '25-30m' },
+        { label: 'Pure & Hygienic', value: '100%' },
     ];
 
     const values = [
         {
             icon: <FaShieldAlt className="text-amber-400 text-2xl" />,
-            title: '100% Pure & Fresh Ingredients (शुद्ध और ताज़ा भोजन)',
+            title: '100% Pure & Fresh Ingredients',
             desc: 'Every meal is made using fresh market vegetables, premium spices, and pure cooking oil under strict daily hygiene standards.',
         },
         {
             icon: <FaMotorcycle className="text-amber-400 text-2xl" />,
-            title: 'Express Village Delivery (घर-घर तक डिलीवरी)',
+            title: 'Express Village Delivery',
             desc: 'No need to travel far to the city. Our dedicated delivery boys bring your hot meals straight to your doorstep and village chowk.',
         },
         {
             icon: <FaUtensils className="text-amber-400 text-2xl" />,
-            title: 'Honest & Affordable Prices (किफायती दाम)',
+            title: 'Honest & Affordable Prices',
             desc: 'High restaurant standards at honest, reasonable village-friendly prices. No hidden charges, just authentic taste.',
         },
         {
             icon: <FaHeart className="text-amber-400 text-2xl" />,
-            title: 'Warm Desi Hospitality (अपनापन और भरोसा)',
+            title: 'Warm Hospitality & Trust',
             desc: 'We treat every customer like family. If you ever need something customized for a birthday, family feast or party, we are just a phone call away.',
         },
     ];
@@ -77,7 +77,7 @@ const About = () => {
                 <div className="text-center space-y-4 max-w-3xl mx-auto">
                     <span className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-bold uppercase tracking-wider bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/25">
                         <FaStore className="text-[11px]" />
-                        <span>Our Story • हमारी कहानी</span>
+                        <span>Our Story</span>
                     </span>
 
                     <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white">

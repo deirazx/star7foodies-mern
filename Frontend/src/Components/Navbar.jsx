@@ -10,7 +10,8 @@ import {
     FaSearch,
     FaHeart,
     FaShieldAlt,
-    FaPhoneAlt
+    FaPhoneAlt,
+    FaUserCircle
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
@@ -94,15 +95,15 @@ function Navbar() {
 
                         {/* LEFT SECTION: Brand Logo */}
                         <div className='flex items-center gap-3 shrink-0'>
-                            <Link to="/" className="flex items-center gap-2.5 group">
-                                <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/25 group-hover:scale-105 transition-all duration-300">
-                                    <FaUtensils className="text-sm md:text-base" />
+                            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group">
+                                <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-11 md:h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/25 group-hover:scale-105 transition-all duration-300 shrink-0">
+                                    <FaUtensils className="text-base sm:text-lg" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-lg md:text-xl font-black tracking-tight text-white leading-none">
+                                    <span className="text-xl sm:text-2xl font-black tracking-tight text-white leading-none">
                                         Star7<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Foodies</span>
                                     </span>
-                                    <span className="text-[9px] text-gray-400 font-medium tracking-wider hidden sm:block">
+                                    <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium tracking-wider hidden sm:block">
                                         Desi Swad • Fast Village Delivery
                                     </span>
                                 </div>
@@ -192,7 +193,7 @@ function Navbar() {
 
                                     {/* Profile Dropdown Menu */}
                                     {showProfileDropdown && (
-                                        <div className="absolute right-0 mt-2 w-60 bg-[#121215] border border-white/10 rounded-2xl py-2 shadow-2xl animate-fadeIn overflow-hidden z-50">
+                                        <div className="absolute right-0 mt-2 w-64 bg-[#121215] border border-white/10 rounded-2xl py-2 shadow-2xl animate-fadeIn overflow-hidden z-50">
                                             {/* User Details */}
                                             <div className="px-4 py-3 border-b border-white/8 bg-white/[0.02]">
                                                 <div className="flex items-center justify-between gap-2">
@@ -206,22 +207,51 @@ function Navbar() {
                                                     )}
                                                 </div>
                                                 <p className="text-gray-400 text-[11px] truncate mt-0.5">
-                                                    {user.email}
+                                                    {user.email || user.phoneNumber || "Village Foodie"}
                                                 </p>
                                             </div>
 
                                             <div className="py-1">
+                                                {/* SECTION 1: My Orders */}
                                                 <Link
                                                     to="/orders"
-                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-gray-300 hover:text-amber-400 hover:bg-white/5 transition-all font-medium"
+                                                    onClick={() => setShowProfileDropdown(false)}
+                                                    className="flex items-center justify-between px-4 py-2.5 text-xs text-gray-200 hover:text-amber-400 hover:bg-white/5 transition-all font-semibold group"
                                                 >
-                                                    <FaHistory className="text-amber-500 text-xs" />
-                                                    <span>My Orders</span>
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-black transition-colors">
+                                                            <FaHistory className="text-xs" />
+                                                        </div>
+                                                        <div>
+                                                            <span className="block font-bold">1. My Orders</span>
+                                                            <span className="block text-[10px] text-gray-400 font-normal">Track status & history</span>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded">View</span>
+                                                </Link>
+
+                                                {/* SECTION 2: Profile */}
+                                                <Link
+                                                    to="/profile"
+                                                    onClick={() => setShowProfileDropdown(false)}
+                                                    className="flex items-center justify-between px-4 py-2.5 text-xs text-gray-200 hover:text-emerald-400 hover:bg-white/5 transition-all font-semibold group"
+                                                >
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-black transition-colors">
+                                                            <FaUserCircle className="text-xs" />
+                                                        </div>
+                                                        <div>
+                                                            <span className="block font-bold">2. My Profile</span>
+                                                            <span className="block text-[10px] text-gray-400 font-normal">Name, Mobile & Details</span>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">›</span>
                                                 </Link>
 
                                                 {user?.role === "admin" && (
                                                     <Link
                                                         to="/admin"
+                                                        onClick={() => setShowProfileDropdown(false)}
                                                         className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-all font-semibold"
                                                     >
                                                         <FaShieldAlt className="text-xs" />
@@ -231,17 +261,18 @@ function Navbar() {
 
                                                 <Link
                                                     to="/menu"
-                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-gray-300 hover:text-amber-400 hover:bg-white/5 transition-all font-medium"
+                                                    onClick={() => setShowProfileDropdown(false)}
+                                                    className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-400 hover:text-amber-400 hover:bg-white/5 transition-all font-medium"
                                                 >
                                                     <FaUtensils className="text-amber-500 text-xs" />
-                                                    <span>Explore Menu</span>
+                                                    <span>Explore Food Menu</span>
                                                 </Link>
                                             </div>
 
                                             <div className="pt-1 border-t border-white/8">
                                                 <button
                                                     onClick={handleLogout}
-                                                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 transition-all font-semibold cursor-pointer"
+                                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-400 hover:bg-rose-500/10 transition-all font-semibold cursor-pointer"
                                                 >
                                                     <FaSignOutAlt className="text-xs" />
                                                     <span>Log Out</span>
@@ -282,33 +313,76 @@ function Navbar() {
                 <div className='p-5 space-y-4 max-h-[80vh] overflow-y-auto'>
                     {/* User Profile Banner in Mobile Menu */}
                     {user ? (
-                        <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/10">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black font-black text-sm shadow-md">
-                                {user.name ? user.name[0].toUpperCase() : (user.email ? user.email[0].toUpperCase() : 'U')}
+                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black font-black text-sm shadow-md shrink-0">
+                                    {user.name ? user.name[0].toUpperCase() : (user.email ? user.email[0].toUpperCase() : 'U')}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-white text-sm font-bold truncate">{user.name || "Customer"}</p>
+                                    <p className="text-gray-400 text-xs truncate">{user.email || user.phoneNumber}</p>
+                                </div>
+                                {user.role === "admin" && (
+                                    <span className="px-2 py-0.5 text-[9px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                                        ADMIN
+                                    </span>
+                                )}
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-white text-sm font-bold truncate">{user.name || "Customer"}</p>
-                                <p className="text-gray-400 text-xs truncate">{user.email}</p>
+
+                            {/* 2 Dedicated Quick Sections for Account */}
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/8">
+                                <Link
+                                    to="/orders"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 active:scale-95 transition-all text-center"
+                                >
+                                    <FaHistory className="text-amber-400 text-sm mb-1" />
+                                    <span className="text-xs font-bold text-white">1. My Orders</span>
+                                    <span className="text-[10px] text-amber-300/80 font-medium">Track Status</span>
+                                </Link>
+
+                                <Link
+                                    to="/profile"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 active:scale-95 transition-all text-center"
+                                >
+                                    <FaUserCircle className="text-emerald-400 text-sm mb-1" />
+                                    <span className="text-xs font-bold text-white">2. Profile</span>
+                                    <span className="text-[10px] text-emerald-300/80 font-medium">Name & Details</span>
+                                </Link>
                             </div>
-                            {user.role === "admin" && (
-                                <span className="px-2 py-0.5 text-[9px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md">
-                                    ADMIN
-                                </span>
-                            )}
                         </div>
                     ) : (
-                        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 flex items-center justify-between">
-                            <div>
-                                <p className="text-white font-bold text-xs">Welcome to Star7Foodies</p>
-                                <p className="text-gray-400 text-[10px]">Sign in to order food & track delivery</p>
+                        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-white font-bold text-xs">Welcome to Star7Foodies</p>
+                                    <p className="text-gray-400 text-[10px]">Village Swad, Fast Free Delivery</p>
+                                </div>
+                                <Link
+                                    to="/login"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-extrabold text-xs rounded-xl shadow cursor-pointer"
+                                >
+                                    Sign In
+                                </Link>
                             </div>
-                            <Link
-                                to="/login"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold text-xs rounded-xl shadow cursor-pointer"
-                            >
-                                Sign In
-                            </Link>
+                            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
+                                <Link
+                                    to="/orders"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-center py-1.5 px-2 rounded-lg bg-white/5 text-[11px] font-semibold text-gray-300 hover:text-amber-400"
+                                >
+                                    📦 1. Track Order
+                                </Link>
+                                <Link
+                                    to="/profile"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-center py-1.5 px-2 rounded-lg bg-white/5 text-[11px] font-semibold text-gray-300 hover:text-emerald-400"
+                                >
+                                    👤 2. Profile
+                                </Link>
+                            </div>
                         </div>
                     )}
 
@@ -346,17 +420,31 @@ function Navbar() {
                         ))}
 
                         {user && (
-                            <Link
-                                to="/orders"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className='flex items-center justify-between p-3 rounded-xl text-gray-300 text-sm font-semibold hover:bg-white/5 hover:text-amber-400 transition-colors'
-                            >
-                                <span className="flex items-center gap-2">
-                                    <FaHistory className="text-amber-500 text-xs" />
-                                    My Orders
-                                </span>
-                                <span className="text-gray-600 text-xs">›</span>
-                            </Link>
+                            <>
+                                <Link
+                                    to="/orders"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className='flex items-center justify-between p-3 rounded-xl text-gray-300 text-sm font-semibold hover:bg-white/5 hover:text-amber-400 transition-colors'
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <FaHistory className="text-amber-500 text-xs" />
+                                        <span>1. My Orders</span>
+                                    </span>
+                                    <span className="text-gray-600 text-xs">›</span>
+                                </Link>
+
+                                <Link
+                                    to="/profile"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className='flex items-center justify-between p-3 rounded-xl text-gray-300 text-sm font-semibold hover:bg-white/5 hover:text-emerald-400 transition-colors'
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <FaUserCircle className="text-emerald-400 text-xs" />
+                                        <span>2. My Profile</span>
+                                    </span>
+                                    <span className="text-gray-600 text-xs">›</span>
+                                </Link>
+                            </>
                         )}
                     </div>
 

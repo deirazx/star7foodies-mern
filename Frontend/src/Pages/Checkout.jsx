@@ -113,11 +113,38 @@ const Checkout = () => {
         }
     }, [cleanPincode, subtotal]);
 
+    // Free Delivery Threshold and shortfall calculation
+    const freeDeliveryThreshold = cleanPincode === "843323" ? 299 : 500;
+    const amountNeededForFreeDelivery = Math.max(0, freeDeliveryThreshold - subtotal);
+    const freeDeliveryProgress = Math.min(100, Math.round((subtotal / freeDeliveryThreshold) * 100));
+
     const grandTotal = subtotal + (cleanPincode && isPincodeSupported ? deliveryFee : (cleanPincode === "843323" ? 25 : 50));
+
+    // Safe Indian Phone Sanitizer (Handles +91, 91, 0 without stripping valid numbers starting with 91)
+    const sanitizeIndianPhone = (raw) => {
+        if (!raw) return '';
+        let digits = String(raw).replace(/\D/g, '');
+        if (digits.length === 12 && digits.startsWith('91')) {
+            digits = digits.slice(2);
+        } else if (digits.length === 11 && digits.startsWith('0')) {
+            digits = digits.slice(1);
+        }
+        return digits;
+    };
 
     // Form Change Handler
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+        if (name === 'phone') {
+            let sanitized = sanitizeIndianPhone(value);
+            if (sanitized.length > 10) sanitized = sanitized.slice(0, 10);
+            setFormData(prev => ({ ...prev, phone: sanitized }));
+            if (formErrors.phone) {
+                setFormErrors(prev => ({ ...prev, phone: null }));
+            }
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
         if (formErrors[name]) {
             setFormErrors(prev => ({ ...prev, [name]: null }));
@@ -136,13 +163,13 @@ const Checkout = () => {
         }
 
         // Strict Mobile Number Regex
-        const cleanPhone = formData.phone.trim().replace(/^(\+91|91|0)/, '').replace(/[\s-]/g, '');
+        const cleanPhone = sanitizeIndianPhone(formData.phone);
         if (!cleanPhone) {
             errors.phone = 'Mobile number is required';
-        } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-            errors.phone = 'Please enter a valid 10-digit Indian mobile number (must start with 6, 7, 8, or 9)';
+        } else if (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+            errors.phone = 'Please enter a valid 10-digit mobile number starting with 6, 7, 8 or 9';
         } else if (/^(\d)\1{9}$/.test(cleanPhone) || cleanPhone === '1234567890') {
-            errors.phone = 'Invalid phone number format (fake or repeated digits)';
+            errors.phone = 'Invalid phone number format (fake or repetitive digits)';
         }
 
         // Strict Street Address Validation
@@ -240,7 +267,7 @@ const Checkout = () => {
                     state: formData.state.trim() || 'Bihar',
                     postalCode: formData.postalCode.trim(),
                     country: 'India',
-                    phone: formData.phone.trim()
+                    phone: sanitizeIndianPhone(formData.phone)
                 },
                 paymentMethod: formData.paymentMethod
             };
@@ -833,6 +860,66 @@ const Checkout = () => {
 
                     {/* RIGHT COLUMN: STICKY ORDER SUMMARY (5 cols) */}
                     <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
+
+                        {/* DYNAMIC FREE DELIVERY THRESHOLD BANNER */}
+                        {cleanPincode && isPincodeSupported && (
+                            amountNeededForFreeDelivery > 0 ? (
+                                <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/35 rounded-2xl p-4 space-y-2.5 shadow-lg shadow-amber-950/20 animate-fadeIn">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                                                <Truck className="w-4 h-4" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-black text-amber-300 truncate">
+                                                    Add ₹{amountNeededForFreeDelivery} more for FREE Delivery!
+                                                </p>
+                                                <p className="text-[10px] text-gray-400">
+                                                    {cleanPincode === "843323"
+                                                        ? "Free delivery on orders above ₹299 (Hub 843323)"
+                                                        : `Free delivery on orders above ₹500 (${cleanPincode})`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Link
+                                            to="/menu"
+                                            className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-[11px] rounded-xl transition-all shrink-0 shadow-md hover:scale-105 active:scale-95"
+                                        >
+                                            + Add Dish
+                                        </Link>
+                                    </div>
+
+                                    {/* Visual Progress Bar */}
+                                    <div className="space-y-1">
+                                        <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden p-[1px]">
+                                            <div
+                                                className="bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 h-full rounded-full transition-all duration-500"
+                                                style={{ width: `${freeDeliveryProgress}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between text-[9px] text-gray-400 font-medium">
+                                            <span>Current: ₹{subtotal}</span>
+                                            <span className="text-amber-400 font-bold">Free Delivery: ₹{freeDeliveryThreshold}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3.5 flex items-center gap-3 animate-fadeIn">
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-base">
+                                        🎉
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-emerald-300">
+                                            You unlocked FREE Delivery!
+                                        </p>
+                                        <p className="text-[10px] text-gray-400">
+                                            Free Delivery Applied • Delivery Fee is ₹0
+                                        </p>
+                                    </div>
+                                </div>
+                            )
+                        )}
+
                         {/* Order Summary Card */}
                         <div className="bg-[#121214] border border-white/5 rounded-2xl p-5 shadow-sm space-y-4">
                             <div className="flex items-center justify-between pb-3 border-b border-white/5">
@@ -969,7 +1056,7 @@ const Checkout = () => {
                                 Online Payment Notice
                             </h3>
                             <p className="text-xs text-amber-400 font-semibold">
-                                ऑनलाइन भुगतान सुविधा जल्द उपलब्ध होगी
+                                Online payment gateway will be enabled soon
                             </p>
                             <p className="text-xs text-gray-300 leading-relaxed pt-1">
                                 We are currently upgrading our secure UPI & Netbanking gateway with banking partners for 100% fraud protection.

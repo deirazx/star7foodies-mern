@@ -197,6 +197,19 @@ const CATEGORIES = [
     { id: "Beverages", name: "Beverages", icon: "🥤" },
 ];
 
+// Feature toggles for future releases (disabled per user request for now, kept for future)
+const SHOW_DISCOUNT_BADGES = false;
+const SHOW_WISHLIST_BUTTON = false;
+
+// Helper to ensure all ratings are randomized/realistic and strictly > 4.0
+const getRandomRatingAbove4 = (name = '', currentRating = null) => {
+    const num = Number(currentRating);
+    if (num && num > 4.0 && num <= 5.0) return num.toFixed(1);
+    const charSum = String(name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const fraction = (charSum + 19) % 8; // 0..7
+    return (4.2 + fraction / 10).toFixed(1); // 4.2 to 4.9 (Always > 4.0)
+};
+
 const Menu = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -253,7 +266,7 @@ const Menu = () => {
                                 ? item.isVeg
                                 : !(/chicken|meat|mutton|fish|beef|pork|egg|prawn/i.test(item.name)),
                             time: item.time || "25-28 mins",
-                            rating: item.rating || (4.2 + (item.name.length % 7) / 10).toFixed(1),
+                            rating: getRandomRatingAbove4(item.name, item.rating),
                             rawPortion: item.portion,
                             portion: item.portion,
                             portionText: (typeof item.portion === 'object' && item.portion?.half)
@@ -265,13 +278,19 @@ const Menu = () => {
                         }));
                         setFoods(normalized);
                     } else {
-                        setFoods(DEFAULT_MENU_ITEMS);
+                        setFoods(DEFAULT_MENU_ITEMS.map(item => ({
+                            ...item,
+                            rating: getRandomRatingAbove4(item.name, item.rating)
+                        })));
                     }
                 }
             } catch (err) {
                 console.warn("Could not load backend products, using default catalogue:", err);
                 if (isMounted) {
-                    setFoods(DEFAULT_MENU_ITEMS);
+                    setFoods(DEFAULT_MENU_ITEMS.map(item => ({
+                        ...item,
+                        rating: getRandomRatingAbove4(item.name, item.rating)
+                    })));
                 }
             } finally {
                 if (isMounted) {
@@ -518,7 +537,53 @@ const Menu = () => {
                     </div>
 
                     {/* RIGHT PRODUCTS GRID */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 space-y-4">
+                        {/* SPECIAL FREE DELIVERY CART SHORTCUT BANNER */}
+                        {cartItems.length > 0 && (
+                            <div className="bg-gradient-to-r from-amber-500/15 via-[#18181c] to-orange-500/15 border border-amber-500/30 rounded-2xl p-3.5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-black font-black text-sm shrink-0 shadow-md">
+                                        🛵
+                                    </div>
+                                    <div>
+                                        {totalCartAmount < 299 ? (
+                                            <>
+                                                <p className="text-xs font-black text-white">
+                                                    Add <span className="text-amber-400">₹{299 - totalCartAmount} more</span> to get <span className="text-emerald-400">FREE Village Delivery!</span>
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                                    Order ₹299+ pe delivery fee bilkul ₹0 (Cart: {totalCartCount} items • ₹{totalCartAmount})
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
+                                                    <span>🎉 FREE Delivery Unlocked!</span>
+                                                    <span className="text-[10px] text-gray-300 font-normal">• Village Express Dispatch</span>
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                                    Your cart is eligible for zero delivery fee ({totalCartCount} items • ₹{totalCartAmount})
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                    <Link
+                                        to="/cart"
+                                        className="px-3.5 py-1.5 bg-white/10 hover:bg-white/15 text-white font-bold text-xs rounded-xl transition-all"
+                                    >
+                                        View Cart
+                                    </Link>
+                                    <Link
+                                        to="/checkout"
+                                        className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-xl shadow-md transition-all"
+                                    >
+                                        Checkout →
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
                         {/* Section Header */}
                         <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
                             <div>
@@ -643,17 +708,19 @@ const Menu = () => {
                                                             )}
                                                         </div>
 
-                                                        {/* Favorite Heart Button */}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                toggleWishlist(itemId);
-                                                            }}
-                                                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-gray-300 hover:text-red-500 transition-all cursor-pointer"
-                                                            title="Add to Wishlist"
-                                                        >
-                                                            <Heart className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500 fill-red-500' : ''}`} />
-                                                        </button>
+                                                        {/* Favorite Heart Button (Disabled for now, preserved for future) */}
+                                                        {SHOW_WISHLIST_BUTTON && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleWishlist(itemId);
+                                                                }}
+                                                                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-gray-300 hover:text-red-500 transition-all cursor-pointer"
+                                                                title="Add to Wishlist"
+                                                            >
+                                                                <Heart className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500 fill-red-500' : ''}`} />
+                                                            </button>
+                                                        )}
 
                                                         {/* Delivery Time Pill */}
                                                         <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-md border border-white/10 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
@@ -661,8 +728,8 @@ const Menu = () => {
                                                             <span>{item.time || "25-28 mins"}</span>
                                                         </div>
 
-                                                        {/* Discount Tag */}
-                                                        {item.discount && (
+                                                        {/* Discount Tag (Disabled for now, preserved for future) */}
+                                                        {SHOW_DISCOUNT_BADGES && item.discount && (
                                                             <div className="absolute bottom-2 right-2 bg-gradient-to-r from-orange-600 to-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">
                                                                 {item.discount}
                                                             </div>

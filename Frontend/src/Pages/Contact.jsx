@@ -44,17 +44,17 @@ const Contact = () => {
     const contactCards = [
         {
             icon: <FaPhoneAlt className="text-emerald-400 text-lg" />,
-            title: 'Call Directly (सीधे कॉल करें)',
+            title: 'Call Directly',
             primary: RESTAURANT_CONTACT_DATA.phoneDisplay,
             sub: 'Instant table booking & quick food orders',
             actionHref: `tel:${RESTAURANT_CONTACT_DATA.phoneTel}`,
-            actionLabel: 'Call Now • कॉल करें',
+            actionLabel: 'Call Now',
             isAction: true,
             theme: 'emerald'
         },
         {
             icon: <FaWhatsapp className="text-emerald-400 text-xl" />,
-            title: 'WhatsApp Order (व्हाट्सएप)',
+            title: 'WhatsApp Order',
             primary: RESTAURANT_CONTACT_DATA.phoneDisplay,
             sub: 'Send delivery location & ask for daily specials',
             actionHref: `https://wa.me/${RESTAURANT_CONTACT_DATA.whatsappNumber}?text=Namaste%20Star7Foodies,%20I%20want%20to%20place%20an%20order!`,
@@ -64,7 +64,7 @@ const Contact = () => {
         },
         {
             icon: <FaMapMarkerAlt className="text-amber-400 text-lg" />,
-            title: 'Location (रेस्टोरेंट का पता)',
+            title: 'Location',
             primary: `${RESTAURANT_CONTACT_DATA.addressLine1}, ${RESTAURANT_CONTACT_DATA.addressLine2}`,
             sub: RESTAURANT_CONTACT_DATA.statePin,
             actionLabel: null,
@@ -72,7 +72,7 @@ const Contact = () => {
         },
         {
             icon: <FaClock className="text-amber-400 text-lg" />,
-            title: 'Timings (दुकान का समय)',
+            title: 'Kitchen Timings',
             primary: RESTAURANT_CONTACT_DATA.kitchenHours,
             sub: `${RESTAURANT_CONTACT_DATA.deliveryHours} • Open all 7 days`,
             actionLabel: null,
@@ -83,18 +83,18 @@ const Contact = () => {
     const validateForm = () => {
         const errors = {};
         if (!formData.name.trim()) {
-            errors.name = 'Please enter your name (कृपया अपना नाम दर्ज करें)';
+            errors.name = 'Please enter your name';
         }
 
         const phoneClean = formData.phone.trim();
         if (!phoneClean) {
-            errors.phone = 'Mobile number is required (मोबाइल नंबर आवश्यक है)';
+            errors.phone = 'Mobile number is required';
         } else if (!/^[6-9]\d{9}$/.test(phoneClean)) {
-            errors.phone = 'Enter valid 10-digit mobile number (मान्य 10-अंकीय नंबर डालें)';
+            errors.phone = 'Enter valid 10-digit mobile number';
         }
 
         if (!formData.message.trim()) {
-            errors.message = 'Please type a short message (कृपया अपना संदेश लिखें)';
+            errors.message = 'Please type a short message';
         }
 
         setFormErrors(errors);
@@ -141,7 +141,7 @@ const Contact = () => {
                 <div className="text-center space-y-3 max-w-2xl mx-auto">
                     <span className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-bold uppercase tracking-wider bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/25">
                         <FaStore className="text-[11px]" />
-                        <span>Contact Star7Foodies • संपर्क करें</span>
+                        <span>Contact Star7Foodies</span>
                     </span>
 
                     <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white">
@@ -158,7 +158,7 @@ const Contact = () => {
                     {/* LEFT COLUMN: Quick Connect Cards (5 cols) */}
                     <div className="lg:col-span-5 space-y-4">
                         <h3 className="text-sm font-black text-white uppercase tracking-wider text-gray-400 px-1">
-                            Quick Connect (तुरंत संपर्क)
+                            Quick Connect
                         </h3>
 
                         <div className="space-y-3.5">
@@ -207,7 +207,7 @@ const Contact = () => {
                                 <FaCommentAlt />
                             </div>
                             <div>
-                                <h3 className="text-base font-black text-white">Send Us a Message (संदेश भेजें)</h3>
+                                <h3 className="text-base font-black text-white">Send Us a Message</h3>
                                 <p className="text-xs text-gray-400">Our restaurant manager will call or reply to you promptly.</p>
                             </div>
                         </div>
@@ -218,7 +218,7 @@ const Contact = () => {
                                 <FaCheckCircle className="text-emerald-400 text-base shrink-0 mt-0.5" />
                                 <div>
                                     <p className="font-bold text-white text-sm">
-                                        Thank you, {submittedData.name}! (धन्यवाद!)
+                                        Thank you, {submittedData.name}!
                                     </p>
                                     <p className="text-[11px] text-gray-300 mt-1">
                                         We received your inquiry regarding <strong>{submittedData.topic}</strong>. Our team will call you on <strong className="text-emerald-400">{submittedData.phone}</strong> shortly.
@@ -232,7 +232,7 @@ const Contact = () => {
                                 {/* Name Input */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                        Your Full Name (आपका नाम) *
+                                        Your Full Name *
                                     </label>
                                     <input
                                         type="text"
@@ -254,7 +254,7 @@ const Contact = () => {
                                 {/* Phone Input */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                        Mobile Number (10 डिजिट मोबाइल नंबर) *
+                                        Mobile Number *
                                     </label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-bold">+91</span>
@@ -281,7 +281,7 @@ const Contact = () => {
                             {/* Inquiry Topic Dropdown */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                    Topic / Regarding (विषय)
+                                    Topic / Regarding
                                 </label>
                                 <select
                                     name="topic"
@@ -289,17 +289,17 @@ const Contact = () => {
                                     onChange={handleInputChange}
                                     className="w-full px-3.5 py-2.5 bg-[#18181b] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer"
                                 >
-                                    <option value="Order Inquiry">Order Inquiry / ऑर्डर पूछताछ</option>
-                                    <option value="Home Delivery Status">Home Delivery / होम डिलीवरी</option>
-                                    <option value="Party & Catering">Party & Function / शादी-पार्टी ऑर्डर</option>
-                                    <option value="Feedback & Suggestion">Feedback / सुझाव</option>
+                                    <option value="Order Inquiry">Order Inquiry</option>
+                                    <option value="Home Delivery Status">Home Delivery Status</option>
+                                    <option value="Party & Catering">Party & Function Catering</option>
+                                    <option value="Feedback & Suggestion">Feedback & Suggestion</option>
                                 </select>
                             </div>
 
                             {/* Message Textarea */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                                    Your Message (संदेश लिखें) *
+                                    Your Message *
                                 </label>
                                 <textarea
                                     name="message"
@@ -325,7 +325,7 @@ const Contact = () => {
                                     className="flex-1 py-3 px-6 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     <FaPaperPlane className="text-xs" />
-                                    <span>Send Message (संदेश भेजें)</span>
+                                    <span>Send Message</span>
                                 </button>
 
                                 <a

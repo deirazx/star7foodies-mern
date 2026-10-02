@@ -13,6 +13,7 @@ import Admin from './Pages/Admin';
 import Menu from './Pages/Menu';
 import Checkout from './Pages/Checkout';
 import ItemDetails from './Pages/ItemDetails';
+import Profile from './Pages/Profile';
 
 const App = () => {
     return (
@@ -31,6 +32,7 @@ const App = () => {
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/orders" element={<MyOrders />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path='/cart' element={<Cart />} />
                 <Route path='/checkout' element={<Checkout />} />
                 <Route path='/admin' element={<Admin />} />
