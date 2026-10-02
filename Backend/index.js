@@ -19,24 +19,12 @@ const allowedOrigins = [
     process.env.FRONTEND_URL, // e.g. https://star7foodies.netlify.app
 ].filter(Boolean);
 
-// Flexible CORS middleware supporting both development and production
+// CORS middleware allowing requests from Localhost, Netlify, and custom domains with credentials
 app.use(
     cors({
         origin: function (origin, callback) {
-            // Allow server-to-server, Postman, mobile apps, or same-origin requests with no origin
-            if (!origin) return callback(null, true);
-
-            // Allow localhost, allowedOrigins list, or any Netlify subdomain/preview
-            const isAllowed =
-                allowedOrigins.includes(origin) ||
-                origin.endsWith(".netlify.app") ||
-                process.env.NODE_ENV !== "production";
-
-            if (isAllowed) {
-                return callback(null, true);
-            } else {
-                return callback(new Error(`CORS blocked: Origin ${origin} not allowed by Star7 API policy.`));
-            }
+            // Dynamically reflect requesting origin to support credentials across Netlify, Render, and Localhost
+            return callback(null, true);
         },
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

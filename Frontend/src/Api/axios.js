@@ -14,6 +14,7 @@ const API_BASE_URL = rawBaseUrl.endsWith("/") ? rawBaseUrl.slice(0, -1) : rawBas
 const api = axios.create({
     baseURL: API_BASE_URL,
     withCredentials: true,
+    timeout: 45000, // 45s timeout to comfortably accommodate Render free tier cold starts
 });
 
 // Request Interceptor: Attach JWT Bearer token if stored in localStorage (vital for cross-domain cookie fallbacks)
@@ -28,9 +29,22 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle 401 unauthorized cleanup
+// Response Interceptor: Validate JSON content and handle 401 cleanup
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Detect if Netlify returned index.html fallback instead of API response
+        if (typeof response.data === "string" && response.data.trim().toLowerCase().startsWith("<!doctype")) {
+            console.error(
+                "[Star7 API] Critical Error: Received HTML instead of JSON API response from",
+                response.config.url,
+                "\nEnsure VITE_API_BASE_URL is set in Netlify environment variables and the site is redeployed."
+            );
+            return Promise.reject(
+                new Error("Unable to connect to backend server. Please verify VITE_API_BASE_URL in Netlify.")
+            );
+        }
+        return response;
+    },
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem("star7_token");
@@ -107,7 +121,11 @@ export const googleLoginUser = async (googleData) => {
 export const currentUser = async () => {
     try {
         const response = await api.get("/api/users/current-user");
-        return response.data?.user || response.data;
+        const userData = response.data?.user || response.data;
+        if (userData && typeof userData === "object" && (userData._id || userData.id || userData.email)) {
+            return userData;
+        }
+        return null;
     } catch (error) {
         return null;
     }

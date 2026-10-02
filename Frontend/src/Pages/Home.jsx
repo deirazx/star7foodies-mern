@@ -19,84 +19,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addToCart, removeFromCart } from '../Redux/Slices/cart.js';
 import PortionModal from '../Components/PortionModal';
 
-const FOODS = [
-    {
-        _id: "mock-1",
-        id: "mock-1",
-        name: "Special Desi Chicken Curry",
-        category: "Chicken",
-        price: 249,
-        rating: 4.8,
-        time: "25-30 mins",
-        isVeg: false,
-        desc: "Slow-cooked tender bone-in chicken in fragrant desi spices and thick onion-tomato gravy.",
-        image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=60",
-        imageUrl: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=60",
-        discount: "Chef Special",
-        bestseller: true
-    },
-    {
-        _id: "mock-2",
-        id: "mock-2",
-        name: "Double Cheese Margherita Pizza",
-        category: "Pizza",
-        price: 199,
-        rating: 4.6,
-        time: "15-20 mins",
-        isVeg: true,
-        desc: "Classic delight with 100% real mozzarella cheese, fresh basil leaves, and tangy tomato sauce.",
-        image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60",
-        imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60",
-        discount: "10% OFF",
-        bestseller: true
-    },
-    {
-        _id: "mock-3",
-        id: "mock-3",
-        name: "Double Egg Chicken Kathi Roll",
-        category: "Roll",
-        price: 129,
-        rating: 4.7,
-        time: "15-20 mins",
-        isVeg: false,
-        desc: "Flaky paratha layered with golden egg and stuffed with spiced chicken tikka, crisp onions and mint chutney.",
-        image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=500&auto=format&fit=crop&q=60",
-        imageUrl: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=500&auto=format&fit=crop&q=60",
-        discount: "20% OFF",
-        bestseller: true
-    },
-    {
-        _id: "mock-4",
-        id: "mock-4",
-        name: "Paneer Butter Masala Tadka",
-        category: "Paneer Tadka",
-        price: 229,
-        rating: 4.7,
-        time: "20-25 mins",
-        isVeg: true,
-        desc: "Rich cottage cheese cubes cooked in sweet & creamy tomato gravy with a garlic butter tadka.",
-        image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=60",
-        imageUrl: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=60",
-        discount: "Popular",
-        bestseller: true
-    },
-    {
-        _id: "mock-5",
-        id: "mock-5",
-        name: "Royal Star7 Special Thali",
-        category: "Star7 Thali",
-        price: 269,
-        rating: 4.9,
-        time: "25-30 mins",
-        isVeg: true,
-        desc: "Grand feast with Paneer dish, Dal Tadka, Seasonal Sabzi, Jeera Rice, 3 Butter Rotis, Salad, Raita & Gulab Jamun.",
-        image: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=500&auto=format&fit=crop&q=60",
-        imageUrl: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=500&auto=format&fit=crop&q=60",
-        discount: "Complete Meal",
-        bestseller: true
-    }
-];
-
 const CATEGORIES = [
     { name: "Indian Veg", icon: "🥦", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&auto=format&fit=crop&q=60" },
     { name: "Egg", icon: "🍳", image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=300&auto=format&fit=crop&q=60" },
@@ -164,21 +86,18 @@ const Home = () => {
         const fetchFoods = async () => {
             try {
                 setLoading(true);
+                setError(null);
                 const data = await allFoods();
-                const productsList = data.items || [];
-                if (productsList.length > 0) {
-                    setFoods(productsList.map(item => ({
-                        ...item,
-                        _id: item._id || item.id,
-                        imageUrl: item.image_url || item.imageUrl || item.image
-                    })));
-                } else {
-                    setFoods(FOODS);
-                }
+                const productsList = (data && data.items && Array.isArray(data.items)) ? data.items : [];
+                setFoods(productsList.map(item => ({
+                    ...item,
+                    _id: item._id || item.id,
+                    imageUrl: item.image_url || item.imageUrl || item.image
+                })));
             } catch (err) {
-                console.error("Error loading foods:", err);
-                setError(err.message);
-                setFoods(FOODS);
+                console.error("Error loading foods from backend:", err);
+                setError(err.message || "Unable to load dishes. Please check your backend connection.");
+                setFoods([]);
             } finally {
                 setLoading(false);
             }
@@ -434,7 +353,33 @@ const Home = () => {
                     </p>
                 </div>
 
-                {filteredFoods.length > 0 ? (
+                {loading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        {[...Array(10)].map((_, i) => (
+                            <div key={i} className="bg-[#121214] border border-white/5 rounded-2xl p-4 space-y-3 animate-pulse">
+                                <div className="w-full aspect-square bg-white/5 rounded-xl"></div>
+                                <div className="h-4 bg-white/5 rounded w-3/4"></div>
+                                <div className="h-3 bg-white/5 rounded w-1/2"></div>
+                                <div className="flex justify-between items-center pt-2">
+                                    <div className="h-5 bg-white/5 rounded w-14"></div>
+                                    <div className="h-8 bg-white/5 rounded w-16"></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : error ? (
+                    <div className="py-16 text-center bg-white/5 border border-red-500/20 rounded-2xl p-6 space-y-3">
+                        <div className="text-3xl">⚠️</div>
+                        <p className="text-sm font-bold text-white">Server Connection Error</p>
+                        <p className="text-xs text-gray-400 max-w-md mx-auto">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold text-xs rounded-xl shadow-md cursor-pointer hover:scale-105 transition-all"
+                        >
+                            Retry Connection
+                        </button>
+                    </div>
+                ) : filteredFoods.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                         {filteredFoods.map((food) => {
                             const foodId = food._id || food.id;

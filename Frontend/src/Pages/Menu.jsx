@@ -21,250 +21,6 @@ import {
     Utensils
 } from 'lucide-react';
 
-// Fallback catalog matching Star7Foodies restaurant theme
-const DEFAULT_MENU_ITEMS = [
-    {
-        _id: "m1",
-        name: "Special Desi Chicken Curry",
-        category: "Chicken",
-        price: 249,
-        originalPrice: 299,
-        rating: 4.8,
-        reviewsCount: 320,
-        time: "25-28 mins",
-        isVeg: false,
-        portion: "Serves 1-2 • 4 Pieces",
-        description: "Slow-cooked tender bone-in chicken in fragrant desi spices and rich onion-tomato gravy.",
-        imageUrl: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=60",
-        discount: "Chef Special",
-        isBestseller: true
-    },
-    {
-        _id: "m2",
-        name: "Paneer Tikka Butter Tadka",
-        category: "Paneer Tadka",
-        price: 239,
-        originalPrice: 289,
-        rating: 4.7,
-        reviewsCount: 245,
-        time: "20-25 mins",
-        isVeg: true,
-        portion: "Serves 1-2 • 450g",
-        description: "Char-grilled cottage cheese cubes simmered in a silky, rich makhani gravy with fenugreek butter tadka.",
-        imageUrl: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=60",
-        discount: "15% OFF",
-        isBestseller: true
-    },
-    {
-        _id: "m3",
-        name: "Double Cheese Margherita Pizza",
-        category: "Pizza",
-        price: 219,
-        originalPrice: 269,
-        rating: 4.6,
-        reviewsCount: 180,
-        time: "15-20 mins",
-        isVeg: true,
-        portion: "8 inches • 4 Slices",
-        description: "Crisp hand-tossed crust overloaded with mozzarella, aromatic basil oil and rich tomato puree.",
-        imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60",
-        discount: "₹50 OFF",
-        isBestseller: false
-    },
-    {
-        _id: "m4",
-        name: "Double Egg Chicken Kathi Roll",
-        category: "Roll",
-        price: 139,
-        originalPrice: 169,
-        rating: 4.8,
-        reviewsCount: 410,
-        time: "12-15 mins",
-        isVeg: false,
-        portion: "1 Jumbo Roll",
-        description: "Crispy layered paratha wrapped with golden egg, roasted chicken chunks, sliced onions and tangy mint chutney.",
-        imageUrl: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=500&auto=format&fit=crop&q=60",
-        discount: "20% OFF",
-        isBestseller: true
-    },
-    {
-        _id: "m5",
-        name: "Crispy Fried Chicken Lollypope",
-        category: "Lollypope",
-        price: 209,
-        originalPrice: 249,
-        rating: 4.7,
-        reviewsCount: 280,
-        time: "15-20 mins",
-        isVeg: false,
-        portion: "6 Pieces",
-        description: "Crispy seasoned chicken wingettes tossed with garlic, ginger and spicy schezwan dipping sauce.",
-        imageUrl: "https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=500&auto=format&fit=crop&q=60",
-        discount: "20% OFF",
-        isBestseller: true
-    },
-    {
-        _id: "m6",
-        name: "Grand Star7 Special Thali",
-        category: "Star7 Thali",
-        price: 269,
-        originalPrice: 320,
-        rating: 4.9,
-        reviewsCount: 520,
-        time: "20-25 mins",
-        isVeg: true,
-        portion: "Full Feast Platter",
-        description: "Deluxe village thali with Paneer Butter Masala, Dal Tadka, Seasonal Mix Veg, Jeera Rice, 3 Butter Rotis, Salad, Raita & Sweet.",
-        imageUrl: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=500&auto=format&fit=crop&q=60",
-        discount: "Best Value",
-        isBestseller: true
-    },
-    {
-        _id: "m7",
-        name: "Chilli Chicken Dry (Indo-Chinese)",
-        category: "Chinese Spice",
-        price: 219,
-        originalPrice: 259,
-        rating: 4.6,
-        reviewsCount: 290,
-        time: "20-25 mins",
-        isVeg: false,
-        portion: "Serves 1-2 • 350g",
-        description: "Crisp chicken pieces tossed with green chillies, bell peppers and dark soya sauce in a sizzling wok.",
-        imageUrl: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&auto=format&fit=crop&q=60",
-        discount: "Spicy Hit",
-        isBestseller: true
-    },
-    {
-        _id: "m8",
-        name: "Desi Double Egg Curry",
-        category: "Egg",
-        price: 159,
-        originalPrice: 189,
-        rating: 4.6,
-        reviewsCount: 165,
-        time: "15-20 mins",
-        isVeg: false,
-        portion: "2 Boiled Eggs • 350g Gravy",
-        description: "Farm fresh boiled eggs sautéed in turmeric and simmered in a spiced desi tomato and onion gravy.",
-        imageUrl: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=500&auto=format&fit=crop&q=60",
-        discount: "Homestyle",
-        isBestseller: false
-    },
-    {
-        _id: "m9",
-        name: "Aromatic Jeera Fried Rice",
-        category: "Rice",
-        price: 149,
-        originalPrice: 179,
-        rating: 4.5,
-        reviewsCount: 190,
-        time: "15-20 mins",
-        isVeg: true,
-        portion: "Serves 1-2 • 450g",
-        description: "Long-grain basmati rice tempered with pure desi ghee, roasted cumin seeds and fresh coriander.",
-        imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=500&auto=format&fit=crop&q=60",
-        discount: "15% OFF",
-        isBestseller: false
-    },
-    {
-        _id: "m10",
-        name: "Butter Tandoori Lachha Paratha (2 Pcs)",
-        category: "Roti Pratha",
-        price: 79,
-        originalPrice: 99,
-        rating: 4.8,
-        reviewsCount: 310,
-        time: "10-15 mins",
-        isVeg: true,
-        portion: "2 Pieces",
-        description: "Multi-layered flaky whole wheat parathas baked in tandoor and brushed with salted Amul butter.",
-        imageUrl: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=500&auto=format&fit=crop&q=60",
-        discount: "Crisp & Fresh",
-        isBestseller: true
-    },
-    {
-        _id: "m11",
-        name: "Veg Hakka Noodles Chowmein",
-        category: "Noodles",
-        price: 139,
-        originalPrice: 169,
-        rating: 4.6,
-        reviewsCount: 220,
-        time: "12-15 mins",
-        isVeg: true,
-        portion: "Serves 1-2 • 400g",
-        description: "Wok-tossed noodles with crunchy cabbage, capsicum, carrots, spring onions and garlic soy sauce.",
-        imageUrl: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500&auto=format&fit=crop&q=60",
-        discount: "Classic",
-        isBestseller: false
-    },
-    {
-        _id: "m12",
-        name: "Hot & Sour Veg Soup",
-        category: "Soup",
-        price: 99,
-        originalPrice: 129,
-        rating: 4.5,
-        reviewsCount: 140,
-        time: "10-12 mins",
-        isVeg: true,
-        portion: "350 ml Bowl",
-        description: "Warm, tangy and spicy soup infused with shredded vegetables, mushrooms, black pepper and vinegar.",
-        imageUrl: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=500&auto=format&fit=crop&q=60",
-        discount: "Comfort Soup",
-        isBestseller: false
-    },
-    {
-        _id: "m13",
-        name: "Homestyle Mix Veg Handi",
-        category: "Indian Veg",
-        price: 179,
-        originalPrice: 219,
-        rating: 4.5,
-        reviewsCount: 175,
-        time: "20-25 mins",
-        isVeg: true,
-        portion: "Serves 1-2 • 400g",
-        description: "Assorted fresh seasonal farm vegetables cooked in authentic Indian masala gravy with fragrant coriander.",
-        imageUrl: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&auto=format&fit=crop&q=60",
-        discount: "Healthy Choice",
-        isBestseller: false
-    },
-    {
-        _id: "m14",
-        name: "Boondi Raita & Fresh Green Salad",
-        category: "Slad/Raita",
-        price: 89,
-        originalPrice: 109,
-        rating: 4.7,
-        reviewsCount: 130,
-        time: "8-10 mins",
-        isVeg: true,
-        portion: "Pair Platter • 300g",
-        description: "Chilled spiced curd mixed with crispy boondi, alongside fresh cucumber, onion, tomato and lemon slices.",
-        imageUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&auto=format&fit=crop&q=60",
-        discount: "Cooling Meal Side",
-        isBestseller: false
-    },
-    {
-        _id: "m15",
-        name: "Crispy Veg Spring Rolls & Pakora",
-        category: "Snacks",
-        price: 129,
-        originalPrice: 159,
-        rating: 4.6,
-        reviewsCount: 260,
-        time: "12-15 mins",
-        isVeg: true,
-        portion: "6 Pieces",
-        description: "Golden fried crispy pastry rolls and vegetable fritters served with hot green chutney and sweet dip.",
-        imageUrl: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=60",
-        discount: "Evening Snack",
-        isBestseller: true
-    }
-];
-
 const CATEGORIES = [
     { id: "All", name: "All Delicacies", icon: "✨" },
     { id: "Indian Veg", name: "Indian Veg", icon: "🥦" },
@@ -305,6 +61,7 @@ const Menu = () => {
 
     const [foods, setFoods] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [vegFilter, setVegFilter] = useState('all'); // 'all' | 'veg' | 'non-veg'
@@ -342,42 +99,34 @@ const Menu = () => {
         const fetchItems = async () => {
             try {
                 setLoading(true);
+                setError(null);
                 const data = await allFoods();
-                const fetched = (data && data.items && data.items.length > 0) ? data.items : [];
+                const fetched = (data && data.items && Array.isArray(data.items)) ? data.items : [];
 
                 if (isMounted) {
-                    if (fetched.length > 0) {
-                        const normalized = fetched.map(item => ({
-                            ...item,
-                            isVeg: item.isVeg !== undefined
-                                ? item.isVeg
-                                : !(/chicken|meat|mutton|fish|beef|pork|egg|prawn/i.test(item.name)),
-                            time: item.time || "25-28 mins",
-                            rating: getRandomRatingAbove4(item.name, item.rating),
-                            rawPortion: item.portion,
-                            portion: item.portion,
-                            portionText: (typeof item.portion === 'object' && item.portion?.half)
-                                ? `Half ₹${item.portion.half} • Full ₹${item.portion.full || item.price}`
-                                : (typeof item.portion === 'string' ? item.portion : "Single Serving"),
-                            originalPrice: item.originalPrice || Math.round(item.price * 1.25),
-                            discount: item.discount || "20% OFF",
-                            isBestseller: item.isBestseller || (item.name.length % 2 === 0)
-                        }));
-                        setFoods(normalized);
-                    } else {
-                        setFoods(DEFAULT_MENU_ITEMS.map(item => ({
-                            ...item,
-                            rating: getRandomRatingAbove4(item.name, item.rating)
-                        })));
-                    }
+                    const normalized = fetched.map(item => ({
+                        ...item,
+                        isVeg: item.isVeg !== undefined
+                            ? item.isVeg
+                            : !(/chicken|meat|mutton|fish|beef|pork|egg|prawn/i.test(item.name)),
+                        time: item.time || "25-28 mins",
+                        rating: getRandomRatingAbove4(item.name, item.rating),
+                        rawPortion: item.portion,
+                        portion: item.portion,
+                        portionText: (typeof item.portion === 'object' && item.portion?.half)
+                            ? `Half ₹${item.portion.half} • Full ₹${item.portion.full || item.price}`
+                            : (typeof item.portion === 'string' ? item.portion : "Single Serving"),
+                        originalPrice: item.originalPrice || Math.round(item.price * 1.25),
+                        discount: item.discount || "20% OFF",
+                        isBestseller: item.isBestseller || (item.name.length % 2 === 0)
+                    }));
+                    setFoods(normalized);
                 }
             } catch (err) {
-                console.warn("Could not load backend products, using default catalogue:", err);
+                console.error("Could not load backend products:", err);
                 if (isMounted) {
-                    setFoods(DEFAULT_MENU_ITEMS.map(item => ({
-                        ...item,
-                        rating: getRandomRatingAbove4(item.name, item.rating)
-                    })));
+                    setError(err.message || "Failed to load dishes from backend server.");
+                    setFoods([]);
                 }
             } finally {
                 if (isMounted) {
@@ -714,6 +463,20 @@ const Menu = () => {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        ) : error ? (
+                            <div className="py-20 text-center bg-[#111114] border border-red-500/20 rounded-3xl p-8 space-y-3">
+                                <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto text-2xl text-red-400">
+                                    ⚠️
+                                </div>
+                                <h3 className="text-lg font-bold text-white">Server Connection Error</h3>
+                                <p className="text-xs text-gray-400 max-w-sm mx-auto">{error}</p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="mt-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-black font-extrabold rounded-xl text-xs transition-all cursor-pointer shadow-md shadow-amber-500/15"
+                                >
+                                    Retry Connection
+                                </button>
                             </div>
                         ) : filteredFoods.length === 0 ? (
                             /* Empty State */
