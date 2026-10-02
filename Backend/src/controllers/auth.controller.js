@@ -25,12 +25,19 @@ const registerUser = async (req, res) => {
         }
 
         const newUser = new User({ name, email, password });
-        const user = await newUser.save()
+        const user = await newUser.save();
+        const token = generateToken(user._id);
 
-        res.status(201).json({
+        res.status(201).cookie("token", token, options).json({
             message: "Account created successfully.",
-            user
-        })
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
     } catch (error) {
         console.log("Error while registering user", error);
         res.status(500).json({ message: "Error while creating user", error: error.message })
@@ -57,20 +64,21 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: "Invalid password" });
         }
 
-        const token = generateToken(user._id)
+        const token = generateToken(user._id);
 
         res
             .status(200)
             .cookie("token", token, options)
             .json({
                 message: "User logged in successfully",
+                token,
                 user: {
                     id: user._id,
                     name: user.name,
                     email: user.email,
                     role: user.role
                 }
-            })
+            });
 
     } catch (error) {
         console.log("Something went wrong while logging user", error);
@@ -137,6 +145,7 @@ const googleLogin = async (req, res) => {
             .cookie("token", token, options)
             .json({
                 message: "Logged in with Google successfully",
+                token,
                 user: {
                     id: user._id,
                     name: user.name,
