@@ -88,7 +88,7 @@ const About = () => {
                     </h1>
 
                     <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-2xl mx-auto">
-                        Started with a big dream in our local area, <strong className="text-amber-400">Star7Foodies</strong> is dedicated to serving top-tier restaurant food — from piping hot biryanis and paneer delicacies to crispy snacks and burgers — with express home delivery right to your door.
+                        Started with a big dream in our local area, <strong className="text-amber-400">Star7Foodies</strong> is dedicated to serving top-tier restaurant food — from sizzling chicken, rolls and paneer delicacies to authentic thalis, noodles and snacks — with express home delivery right to your door.
                     </p>
                 </div>
 

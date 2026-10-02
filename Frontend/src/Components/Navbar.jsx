@@ -141,7 +141,7 @@ function Navbar() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={handleSearchSubmit}
-                                    placeholder="Search samosa, biryani..."
+                                    placeholder="Search chicken, rolls, paneer..."
                                     className="w-44 xl:w-56 pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500/60 focus:bg-white/8 transition-all"
                                 />
                                 <FaSearch
@@ -392,7 +392,7 @@ function Navbar() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleSearchSubmit}
-                            placeholder="Search dishes (biryani, pizza)..."
+                            placeholder="Search dishes (chicken, thali, roll)..."
                             className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500"
                         />
                         <FaSearch

@@ -43,14 +43,21 @@ import {
 
 const CATEGORIES = [
     "All",
-    "Main Course",
-    "Starters",
-    "Biryani",
-    "Pizza",
-    "Burgers",
-    "Desserts",
-    "Beverages",
-    "Chinese"
+    "Indian Veg",
+    "Egg",
+    "Roll",
+    "Rice",
+    "Paneer Tadka",
+    "Slad/Raita",
+    "Roti Pratha",
+    "Noodles",
+    "Soup",
+    "Lollypope",
+    "Chinese Spice",
+    "Star7 Thali",
+    "Chicken",
+    "Snacks",
+    "Pizza"
 ];
 
 const ORDER_STATUS_MAP = {
