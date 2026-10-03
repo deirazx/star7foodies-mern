@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { setUser, clearUser } from '../Redux/Slices/auth.js';
-import { currentUser, myOrders, logoutUser } from '../Api/axios';
+import { currentUser, myOrders, logoutUser, googleLoginUser } from '../Api/axios';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, provider } from '../Utils/firebase';
 import {
     FaUser,
     FaEnvelope,
@@ -20,7 +22,11 @@ import {
     FaEdit,
     FaSave,
     FaTimes,
-    FaAward
+    FaAward,
+    FaGoogle,
+    FaLock,
+    FaArrowRight,
+    FaExclamationCircle
 } from 'react-icons/fa';
 
 const Profile = () => {
@@ -29,6 +35,10 @@ const Profile = () => {
 
     const user = useSelector((state) => state?.auth?.user);
 
+    const [authChecking, setAuthChecking] = useState(!user);
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [authError, setAuthError] = useState(null);
+
     const [recentOrders, setRecentOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState(true);
     const [isEditingPhone, setIsEditingPhone] = useState(false);
@@ -36,26 +46,35 @@ const Profile = () => {
     const [savedSuccess, setSavedSuccess] = useState(false);
     const [logoutModal, setLogoutModal] = useState(false);
 
-    // Sync user session and orders
+    // 1. Sync User Session Smoothly on Mount (Avoids flickering/reload feeling)
     useEffect(() => {
-        const fetchUserData = async () => {
+        let isMounted = true;
+        const syncSession = async () => {
             try {
                 if (!user) {
                     const loggedIn = await currentUser();
-                    if (loggedIn) {
+                    if (loggedIn && isMounted) {
                         dispatch(setUser(loggedIn));
                     }
                 }
             } catch (err) {
-                console.warn("User session check failed:", err);
+                console.warn("Session check error:", err);
+            } finally {
+                if (isMounted) {
+                    setAuthChecking(false);
+                }
             }
         };
 
-        fetchUserData();
+        syncSession();
+        return () => {
+            isMounted = false;
+        };
     }, [dispatch, user]);
 
-    // Fetch user recent orders
+    // 2. Fetch User Recent Orders (Only if logged in)
     useEffect(() => {
+        let isMounted = true;
         const loadOrders = async () => {
             try {
                 setLoadingOrders(true);
@@ -66,18 +85,22 @@ const Profile = () => {
                     const dateB = new Date(b.createdAt || b.date || 0).getTime();
                     return dateB - dateA;
                 });
-                setRecentOrders(sorted);
+                if (isMounted) {
+                    setRecentOrders(sorted);
 
-                // If user doesn't have phone in state, get from latest order address
-                if (sorted.length > 0 && sorted[0].address?.phone && !user?.phone) {
-                    setPhoneInput(sorted[0].address.phone);
-                } else if (user?.phone) {
-                    setPhoneInput(user.phone);
+                    // If user has phone in state or latest order address, prefill
+                    if (user?.phone) {
+                        setPhoneInput(user.phone);
+                    } else if (sorted.length > 0 && sorted[0].address?.phone) {
+                        setPhoneInput(sorted[0].address.phone);
+                    }
                 }
             } catch (err) {
                 console.warn("Could not load recent orders for profile:", err);
             } finally {
-                setLoadingOrders(false);
+                if (isMounted) {
+                    setLoadingOrders(false);
+                }
             }
         };
 
@@ -86,9 +109,33 @@ const Profile = () => {
         } else {
             setLoadingOrders(false);
         }
+
+        return () => {
+            isMounted = false;
+        };
     }, [user]);
 
-    // Handle Phone Number Save (Stores in localStorage & state)
+    // Handle 1-Click Google Login directly on the Account page
+    const handleGoogleLogin = async () => {
+        setAuthError(null);
+        setGoogleLoading(true);
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const name = result.user.displayName;
+            const email = result.user.email;
+
+            const response = await googleLoginUser({ name, email });
+            const loggedInUser = response.user ? response.user : response;
+            dispatch(setUser(loggedInUser));
+        } catch (err) {
+            console.error("Profile Google sign-in failed:", err);
+            setAuthError(err.message || "Google Sign-In failed. Please try again.");
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
+    // Handle Phone Number Save (Stores in state & localStorage)
     const handleSavePhone = () => {
         const clean = phoneInput.replace(/\D/g, '').slice(-10);
         if (clean.length === 10) {
@@ -108,43 +155,166 @@ const Profile = () => {
             console.error("Logout error", e);
         } finally {
             dispatch(clearUser());
-            navigate('/login');
+            setLogoutModal(false);
+            navigate('/');
         }
     };
 
-    // Guest / Not Logged In View
+    // ── STATE 1: INITIAL AUTH VERIFICATION LOADER (Prevents jarring page flashing) ──
+    if (authChecking && !user) {
+        return (
+            <div className="min-h-[75vh] flex flex-col items-center justify-center px-4 bg-[#0a0a0b] text-white">
+                <div className="w-10 h-10 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-3" />
+                <p className="text-xs text-gray-400 font-medium">Verifying your account status...</p>
+            </div>
+        );
+    }
+
+    // ── STATE 2: GUEST / NOT LOGGED IN VIEW ──
+    // Clearly informs the guest to login and highlights all profile features accessible upon sign-in
     if (!user) {
         return (
-            <div className="min-h-[80vh] bg-[#0a0a0b] text-white flex items-center justify-center px-4 py-16">
-                <div className="bg-[#121214] border border-white/10 rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto text-2xl">
-                        <FaUser />
+            <div className="min-h-screen bg-[#0a0a0b] text-white pt-12 md:pt-16 pb-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+                {/* Ambient Background Glows */}
+                <div
+                    className="absolute top-1/4 left-1/2 -translate-x-1/2 rounded-full blur-3xl pointer-events-none"
+                    style={{ width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(245,158,11,0.08) 0%, rgba(0,0,0,0) 70%)' }}
+                />
+
+                <div className="max-w-2xl mx-auto space-y-6 relative z-10">
+                    {/* Header Suggestion Card */}
+                    <div className="bg-gradient-to-br from-[#16161a] via-[#121215] to-[#16161a] border border-white/10 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl relative">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 via-amber-500 to-orange-500 flex items-center justify-center text-black font-black text-2xl mx-auto shadow-xl shadow-amber-500/25">
+                            <FaUser />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                Guest Customer Browsing
+                            </span>
+                            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                                My Account & Profile
+                            </h1>
+                            <p className="text-xs sm:text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
+                                Please sign in to your Star7Foodies account to view your complete profile status, saved delivery address, mobile number, and active orders.
+                            </p>
+                        </div>
+
+                        {/* Error Message if Google Sign-In Fails */}
+                        {authError && (
+                            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center justify-center gap-2">
+                                <FaExclamationCircle className="shrink-0" />
+                                <span>{authError}</span>
+                            </div>
+                        )}
+
+                        {/* Direct Action Buttons */}
+                        <div className="space-y-3 pt-2 max-w-md mx-auto">
+                            {/* 1-Click Google Sign-In (Direct on this page) */}
+                            <button
+                                onClick={handleGoogleLogin}
+                                disabled={googleLoading}
+                                className="w-full py-3 px-4 bg-white/10 hover:bg-white/15 border border-white/15 text-white font-extrabold text-xs rounded-xl transition-all flex items-center justify-center gap-2.5 shadow-md cursor-pointer hover:border-amber-500/40 disabled:opacity-60"
+                            >
+                                <FaGoogle className="text-amber-400 text-sm" />
+                                <span>{googleLoading ? "Signing in with Google..." : "1-Click Continue with Google"}</span>
+                            </button>
+
+                            {/* Standard Email/Password Login with redirect parameter */}
+                            <Link
+                                to="/login?redirect=/profile"
+                                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <FaLock className="text-xs" />
+                                <span>Sign In with Email / Password</span>
+                                <FaArrowRight className="text-[10px]" />
+                            </Link>
+
+                            <div className="flex items-center justify-between text-xs text-gray-400 pt-1">
+                                <span>Don't have an account?</span>
+                                <Link
+                                    to="/register?redirect=/profile"
+                                    className="text-amber-400 font-bold hover:underline"
+                                >
+                                    Create Free Account →
+                                </Link>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-black text-white">Your Star7Foodies Profile</h2>
-                        <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-                            Sign in to view your mobile number, Gmail details, track active orders, and reorder your favorite meals.
-                        </p>
-                    </div>
-                    <div className="space-y-3 pt-2">
-                        <Link
-                            to="/login"
-                            className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all text-center cursor-pointer"
-                        >
-                            Sign In to Your Account
-                        </Link>
-                        <Link
-                            to="/menu"
-                            className="block w-full py-3 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-xs font-bold rounded-xl transition-all text-center"
-                        >
-                            Explore Menu First
-                        </Link>
+
+                    {/* Benefit Cards: What User Can Check Once Logged In */}
+                    <div className="bg-[#121214] border border-white/5 rounded-3xl p-6 sm:p-7 space-y-5">
+                        <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2 text-amber-400">
+                            <FaCheckCircle className="text-xs" />
+                            <span>Why Sign In? All Features You Unlock:</span>
+                        </h2>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                            {/* Benefit 1 */}
+                            <div className="p-3.5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-1">
+                                <div className="flex items-center gap-2 text-amber-400 font-bold">
+                                    <FaPhoneAlt className="text-xs" />
+                                    <span>1. Saved Mobile Number</span>
+                                </div>
+                                <p className="text-gray-400 text-[11px] leading-relaxed">
+                                    Link your 10-digit mobile number for immediate order verification and live delivery updates.
+                                </p>
+                            </div>
+
+                            {/* Benefit 2 */}
+                            <div className="p-3.5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-1">
+                                <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                                    <FaMapMarkerAlt className="text-xs" />
+                                    <span>2. Saved Village Addresses</span>
+                                </div>
+                                <p className="text-gray-400 text-[11px] leading-relaxed">
+                                    Save your home or village landmark across PIN codes 843323, 843314 for 1-click checkout.
+                                </p>
+                            </div>
+
+                            {/* Benefit 3 */}
+                            <div className="p-3.5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-1">
+                                <div className="flex items-center gap-2 text-sky-400 font-bold">
+                                    <FaHistory className="text-xs" />
+                                    <span>3. Live Order Tracking</span>
+                                </div>
+                                <p className="text-gray-400 text-[11px] leading-relaxed">
+                                    Watch your meals get prepared hot in the kitchen and follow delivery riders in real time.
+                                </p>
+                            </div>
+
+                            {/* Benefit 4 */}
+                            <div className="p-3.5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-1">
+                                <div className="flex items-center gap-2 text-orange-400 font-bold">
+                                    <FaUtensils className="text-xs" />
+                                    <span>4. Instant Reordering</span>
+                                </div>
+                                <p className="text-gray-400 text-[11px] leading-relaxed">
+                                    Access past receipts and reorder your favorite biryanis, rolls, and curries with a single tap.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Direct Kitchen Call Hotline */}
+                        <div className="pt-2 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <span className="text-xs text-gray-400">
+                                Need phone ordering or help right now?
+                            </span>
+                            <a
+                                href="tel:+917562926866"
+                                className="w-full sm:w-auto px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                            >
+                                <FaPhoneAlt className="text-[10px]" />
+                                <span>Call Owner: +91 75629 26866</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         );
     }
 
+    // ── STATE 3: FULL LOGGED IN USER PROFILE ──
     const displayName = user.name || "Star7 Foodie Diner";
     const displayEmail = user.email || "No email linked";
     const displayPhone = user.phone || phoneInput || "Not added yet";
@@ -157,7 +327,6 @@ const Profile = () => {
 
                 {/* ── TOP HERO PROFILE CARD ── */}
                 <div className="bg-gradient-to-br from-[#16161a] via-[#121215] to-[#16161a] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-                    {/* Decorative ambient gradient */}
                     <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-amber-500/10 via-orange-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
                     <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">

@@ -11,10 +11,16 @@ import {
     FaPhoneAlt,
     FaUser,
     FaExclamationTriangle,
-    FaReceipt
+    FaReceipt,
+    FaGoogle,
+    FaLock
 } from 'react-icons/fa';
-import { myOrders, cancelOrderApi } from '../Api/axios';
+import { myOrders, cancelOrderApi, googleLoginUser } from '../Api/axios';
 import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser } from '../Redux/Slices/auth.js';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, provider } from '../Utils/firebase';
 
 const DISH_FALLBACK_IMAGES = {
     biryani: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60",
@@ -53,9 +59,13 @@ const getDishImage = (item) => {
 };
 
 const MyOrders = () => {
+    const dispatch = useDispatch();
+    const user = useSelector((state) => state?.auth?.user);
+
     const [activeFilter, setActiveFilter] = useState('All');
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [googleLoading, setGoogleLoading] = useState(false);
     const [cancellingId, setCancellingId] = useState(null);
     const [cancelModalOrder, setCancelModalOrder] = useState(null);
     const [notification, setNotification] = useState(null);
@@ -84,8 +94,29 @@ const MyOrders = () => {
     };
 
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        if (user) {
+            fetchOrders();
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
+
+    const handleGoogleLogin = async () => {
+        setGoogleLoading(true);
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const name = result.user.displayName;
+            const email = result.user.email;
+            const response = await googleLoginUser({ name, email });
+            const loggedInUser = response.user ? response.user : response;
+            dispatch(setUser(loggedInUser));
+        } catch (err) {
+            console.error("Google sign-in error in MyOrders:", err);
+            showNotice("Google Sign-In failed. Please try again.", true);
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
 
     const showNotice = (msg, isErr = false) => {
         setNotification({ text: msg, isError: isErr });
@@ -227,6 +258,49 @@ const MyOrders = () => {
                     <div className="py-20 text-center space-y-3 bg-[#121214] border border-white/8 rounded-3xl">
                         <div className="w-10 h-10 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
                         <p className="text-sm font-bold text-white">Loading your orders...</p>
+                    </div>
+                ) : !user ? (
+                    <div className="py-16 text-center bg-[#121214] border border-white/8 rounded-3xl space-y-5 px-6 max-w-lg mx-auto shadow-2xl">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
+                            <FaReceipt className="text-2xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <h3 className="text-xl font-black text-white">Track Your Food Orders</h3>
+                            <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
+                                Please sign in to your Star7Foodies account to track live kitchen preparation, delivery progress, and view past receipts.
+                            </p>
+                        </div>
+                        <div className="space-y-2.5 pt-1 max-w-xs mx-auto">
+                            <button
+                                onClick={handleGoogleLogin}
+                                disabled={googleLoading}
+                                className="w-full py-2.5 px-4 bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                            >
+                                <FaGoogle className="text-amber-400 text-xs" />
+                                <span>{googleLoading ? "Signing in..." : "1-Click Continue with Google"}</span>
+                            </button>
+                            <Link
+                                to="/login?redirect=/orders"
+                                className="block w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all text-center cursor-pointer"
+                            >
+                                Sign In with Email / Password
+                            </Link>
+                            <Link
+                                to="/menu"
+                                className="block w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold rounded-xl transition-all text-center border border-white/10"
+                            >
+                                Explore Menu First
+                            </Link>
+                        </div>
+                        <div className="pt-3 border-t border-white/5">
+                            <a
+                                href="tel:+917562926866"
+                                className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:underline font-semibold"
+                            >
+                                <FaPhoneAlt className="text-[10px]" />
+                                <span>Call Kitchen Hotline: +91 75629 26866</span>
+                            </a>
+                        </div>
                     </div>
                 ) : filteredOrders.length === 0 ? (
                     <div className="py-20 text-center bg-[#121214] border border-white/8 rounded-3xl space-y-4 px-4">

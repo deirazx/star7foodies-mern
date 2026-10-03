@@ -150,14 +150,14 @@ function Navbar() {
                                 />
                             </div>
 
-                            {/* Quick Call Button (Village friendly) */}
+                            {/* Quick Call Button (Village friendly - Accessible on mobile and desktop) */}
                             <a
                                 href="tel:+917562926866"
                                 title="Call Restaurant Directly"
-                                className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all"
+                                className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all"
                             >
-                                <FaPhoneAlt className="text-[10px]" />
-                                <span className="hidden xl:inline">Call Order</span>
+                                <FaPhoneAlt className="text-[11px]" />
+                                <span className="hidden sm:inline">Call Order</span>
                             </a>
 
                             {/* Cart Icon Button with Badge */}
